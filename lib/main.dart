@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/registration_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const KisanApp());
@@ -13,7 +13,8 @@ class KisanApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kisan App',
       debugShowCheckedModeBanner: false,
-      home: const RegistrationScreen(),
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: const LoginScreen(), // Start with Login
     );
   }
 }
