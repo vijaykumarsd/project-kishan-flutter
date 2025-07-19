@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'agent_screen.dart'; // 👈 correct file with mic/camera/send
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -66,20 +68,20 @@ class HomeScreen extends StatelessWidget {
 }
 
 // Temporary screen for each agent
-class AgentScreen extends StatelessWidget {
-  final String agentTitle;
-  const AgentScreen({super.key, required this.agentTitle});
+// class AgentScreen extends StatelessWidget {
+//   final String agentTitle;
+//   const AgentScreen({super.key, required this.agentTitle});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(agentTitle), backgroundColor: Colors.green[700]),
-      body: Center(
-        child: Text(
-          'This is the $agentTitle screen',
-          style: const TextStyle(fontSize: 20),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text(agentTitle), backgroundColor: Colors.green[700]),
+//       body: Center(
+//         child: Text(
+//           'This is the $agentTitle screen',
+//           style: const TextStyle(fontSize: 20),
+//         ),
+//       ),
+//     );
+//   }
+// }
