@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
 class RegistrationScreen extends StatelessWidget {
   const RegistrationScreen({super.key});
@@ -7,7 +8,7 @@ class RegistrationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final firstNameController = TextEditingController();
     final lastNameController = TextEditingController();
-    final phoneController = TextEditingController();
+    String fullPhoneNumber = "";
 
     return Scaffold(
       appBar: AppBar(
@@ -18,14 +19,13 @@ class RegistrationScreen extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          color: const Color(0xFFDFF5D1),
+          color: Color(0xFFDFF5D1),
           image: DecorationImage(
             image: AssetImage("assets/images/kisan_image.png"),
             fit: BoxFit.cover,
           ),
         ),
         child: Container(
-          // Overlay to darken the background image slightly
           color: Colors.white.withOpacity(0.8),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -45,6 +45,7 @@ class RegistrationScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 30),
+
                 TextField(
                   controller: firstNameController,
                   decoration: const InputDecoration(
@@ -54,6 +55,7 @@ class RegistrationScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
+
                 TextField(
                   controller: lastNameController,
                   decoration: const InputDecoration(
@@ -63,27 +65,47 @@ class RegistrationScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
+
+                // ✅ Replaced with intl_phone_field
+                IntlPhoneField(
                   decoration: const InputDecoration(
-                    labelText: "Phone Number",
+                    labelText: "Mobile Number",
                     filled: true,
                     fillColor: Colors.white70,
+                    border: OutlineInputBorder(),
                   ),
+                  initialCountryCode: 'IN',
+                  onChanged: (phone) {
+                    fullPhoneNumber = phone.completeNumber;
+                  },
                 ),
+
                 const SizedBox(height: 30),
+
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // Go back to login
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Registration Successful!",
-                          style: TextStyle(color: Colors.white),
+                    if (fullPhoneNumber.isNotEmpty && fullPhoneNumber.length > 8) {
+                      Navigator.pop(context); // Go back to login
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Registration Successful!",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.green,
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Please enter a valid mobile number",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[800],

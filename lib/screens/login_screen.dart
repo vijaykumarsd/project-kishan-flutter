@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'registration_screen.dart';
 import 'welcome_screen.dart';
 
@@ -10,10 +11,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final phoneController = TextEditingController();
+  String _fullPhoneNumber = '';
 
   void _login() {
-    if (phoneController.text == "9876543210") {
+    if (_fullPhoneNumber.isNotEmpty && _fullPhoneNumber.length > 8) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const WelcomeScreen()),
@@ -41,9 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-       
         decoration: const BoxDecoration(
-          color: const Color(0xFFDFF5D1),
+          color: Color(0xFFDFF5D1),
           image: DecorationImage(
             image: AssetImage("assets/images/kisan_image.png"),
             fit: BoxFit.cover,
@@ -55,16 +55,24 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 100),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
+
+              // ✅ Intl Phone Field for Country Code & Validation
+              IntlPhoneField(
                 decoration: const InputDecoration(
                   labelText: "Mobile Number",
                   filled: true,
                   fillColor: Colors.white70,
+                  border: OutlineInputBorder(),
                 ),
+                initialCountryCode: 'IN',
+                keyboardType: TextInputType.phone,
+                onChanged: (phone) {
+                  _fullPhoneNumber = phone.completeNumber;
+                },
               ),
+
               const SizedBox(height: 20),
+
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
@@ -76,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
+
               TextButton(
                 onPressed: () {
                   Navigator.push(

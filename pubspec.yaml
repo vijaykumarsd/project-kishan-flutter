@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   font_awesome_flutter: ^10.5.0
+  country_picker: ^2.0.27
+  phone_number: ^2.1.0
+  intl_phone_field: ^3.2.0
 
 dev_dependencies:
   flutter_test:
