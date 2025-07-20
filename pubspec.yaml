@@ -30,4 +30,7 @@ flutter:
   assets:
     - assets/images/kisan_image.png
     - assets/images/kisan_logo.png
+    - assets/images/farmer.jpg
+    - assets/images/truck.jpg
+    - assets/images/farmer_icon.png
 

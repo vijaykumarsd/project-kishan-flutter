@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'registration_screen.dart';
@@ -35,75 +36,122 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Login"),
-        backgroundColor: Colors.green[700],
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Color(0xFFDFF5D1),
-          image: DecorationImage(
-            image: AssetImage("assets/images/kisan_image.png"),
-            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          // ✅ Full background image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/farmer.jpg',
+              fit: BoxFit.cover,
+              color: Colors.black.withOpacity(0.4),
+              colorBlendMode: BlendMode.darken,
+            ),
           ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 100),
 
-              // ✅ Intl Phone Field for Country Code & Validation
-              IntlPhoneField(
-                decoration: const InputDecoration(
-                  labelText: "Mobile Number",
-                  filled: true,
-                  fillColor: Colors.white70,
-                  border: OutlineInputBorder(),
-                ),
-                initialCountryCode: 'IN',
-                keyboardType: TextInputType.phone,
-                onChanged: (phone) {
-                  _fullPhoneNumber = phone.completeNumber;
-                },
-              ),
+          // ✅ Responsive, scrollable foreground
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // ✅ Circular App Logo
+                            ClipOval(
+                              child: Image.asset(
+                                'assets/images/kisan_image.png',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
 
-              const SizedBox(height: 20),
+                            const Text(
+                              "Welcome to Project Kisan",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 40),
 
-              ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[800],
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
-                ),
-                child: const Text(
-                  "Send OTP & Login",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+                            // ✅ Constrained input & button
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  IntlPhoneField(
+                                    decoration: const InputDecoration(
+                                      labelText: "Mobile Number",
+                                      filled: true,
+                                      fillColor: Colors.white70,
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    initialCountryCode: 'IN',
+                                    keyboardType: TextInputType.phone,
+                                    onChanged: (phone) {
+                                      _fullPhoneNumber = phone.completeNumber;
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton(
+                                    onPressed: _login,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green[800],
+                                      minimumSize: const Size.fromHeight(48),
+                                    ),
+                                    child: const Text(
+                                      "Send OTP & Login",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
 
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegistrationScreen()),
-                  );
-                },
-                child: const Text(
-                  "New user? Register here",
-                  style: TextStyle(
-                    color: Colors.black,
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.bold,
+                            // ✅ Hyperlink-style Register Link
+                            MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegistrationScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  "New user? Register here",
+                                  style: TextStyle(
+                                    color: Colors.lightBlueAccent,
+                                    decoration: TextDecoration.underline,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        ),
+        ],
       ),
     );
   }
