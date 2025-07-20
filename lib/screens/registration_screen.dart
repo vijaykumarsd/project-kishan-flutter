@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class RegistrationScreen extends StatefulWidget {
@@ -14,23 +15,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final lastNameController = TextEditingController();
   String _fullPhoneNumber = '';
 
-  void _register() {
-    final first = firstNameController.text.trim();
-    final last = lastNameController.text.trim();
-    final phone = _fullPhoneNumber.trim();
+  Future<void> _register() async {
+  final first = firstNameController.text.trim();
+  final last = lastNameController.text.trim();
+  final phone = _fullPhoneNumber.trim();
 
-    if (first.isEmpty || last.isEmpty || phone.isEmpty || phone.length <= 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Please fill all fields correctly",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.redAccent,
+  if (first.isEmpty || last.isEmpty || phone.isEmpty || phone.length <= 8) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Please fill all fields correctly",
+          style: TextStyle(color: Colors.white),
         ),
-      );
-      return;
-    }
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+    return;
+  }
+
+  try {
+    await FirebaseFirestore.instance.collection('farmers').add({
+      'first_name': first,
+      'last_name': last,
+      'phone_number': phone,
+      'registered_at': Timestamp.now(),
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -42,7 +51,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
     Navigator.pop(context);
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error: ${e.toString()}"),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
