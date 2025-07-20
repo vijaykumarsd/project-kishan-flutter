@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 
+// 🔹 ChatMessage model
+class ChatMessage {
+  final String sender;
+  final String message;
+
+  ChatMessage({required this.sender, required this.message});
+}
+
 class AgentScreen extends StatefulWidget {
   final String agentTitle;
 
@@ -13,18 +21,11 @@ class AgentScreen extends StatefulWidget {
 
 class _AgentScreenState extends State<AgentScreen> {
   final TextEditingController _controller = TextEditingController();
-  final List<String> _messages = [];
+  final List<ChatMessage> _messages = [];
+
   late stt.SpeechToText _speech;
   late FlutterTts _flutterTts;
   bool _isListening = false;
-  int _currentIndex = 0;
-
-  final List<Widget> _dummyScreens = [
-    Placeholder(), // Replace with real screens
-    Placeholder(),
-    Placeholder(),
-    Placeholder(),
-  ];
 
   @override
   void initState() {
@@ -33,25 +34,55 @@ class _AgentScreenState extends State<AgentScreen> {
     _flutterTts = FlutterTts();
   }
 
+  // 🔸 Handle sending user message and agent response
   void _sendMessage() {
     final text = _controller.text.trim();
-    if (text.isNotEmpty) {
+    if (text.isEmpty) return;
+
+    setState(() {
+      _messages.add(ChatMessage(sender: 'user', message: text));
+      _controller.clear();
+    });
+
+    // Generate agent reply
+    final agentReply = _getAgentReply(text);
+
+    // Add reply and speak it after a short delay
+    Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
-        _messages.add(text);
-        _controller.clear();
+        _messages.add(ChatMessage(sender: 'agent', message: agentReply));
       });
-      _speak("You said: $text");
+      _speak(agentReply);
+    });
+  }
+
+  // 🤖 Hardcoded simulated replies
+  String _getAgentReply(String userInput) {
+    final input = userInput.toLowerCase();
+
+    if (input.contains('hi') || input.contains('hello')) {
+      return 'Hi, how can I help you?';
+    } else if (input.contains('weather')) {
+      return "Today's weather is sunny and clear.";
+    } else if (input.contains('your name')) {
+      return "I'm your assistant agent.";
+    } else if (input.contains('thanks')) {
+      return "You're welcome!";
+    } else {
+      return "Sorry, I didn't understand that. Can you rephrase?";
     }
   }
 
+  // 🔉 Text-to-speech
   void _speak(String text) async {
     await _flutterTts.setLanguage("en-IN");
-    await _flutterTts.setPitch(1);
+    await _flutterTts.setPitch(1.0);
     await _flutterTts.speak(text);
   }
 
+  // 🎤 Voice to text
   void _handleVoiceInput() async {
-    bool available = await _speech.initialize();
+    final available = await _speech.initialize();
     if (available) {
       setState(() => _isListening = true);
       _speech.listen(
@@ -68,14 +99,32 @@ class _AgentScreenState extends State<AgentScreen> {
     }
   }
 
+  // 📸 Placeholder for camera feature
   void _handleCameraInput() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('📷 Camera input clicked')),
     );
   }
 
-  void _onBottomNavTap(int index) {
-    setState(() => _currentIndex = index);
+  // 💬 Chat bubble widget
+  Widget _buildChatBubble(ChatMessage message) {
+    final isUser = message.sender == 'user';
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isUser ? Colors.green[100] : Colors.blue[100],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          message.message,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ),
+    );
   }
 
   @override
@@ -85,103 +134,54 @@ class _AgentScreenState extends State<AgentScreen> {
         title: Text(widget.agentTitle),
         backgroundColor: Colors.green[700],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: const <Widget>[
-            UserAccountsDrawerHeader(
-              accountName: Text("Vijay Kumar"),
-              accountEmail: Text("vijay@example.com"),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage("https://i.pravatar.cc/150?img=3"),
-              ),
-              decoration: BoxDecoration(color: Colors.green),
+      body: Column(
+        children: [
+          // Chat message list
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return _buildChatBubble(_messages[index]);
+              },
             ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text("Home"),
-            ),
-            ListTile(
-              leading: Icon(Icons.settings),
-              title: Text("Settings"),
-            ),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text("Logout"),
-            ),
-          ],
-        ),
-      ),
-      body: _currentIndex == 0
-          ? Column(
+          ),
+
+          // Input section
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            color: Colors.grey[100],
+            child: Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.mic, color: Colors.green),
+                  onPressed: _handleVoiceInput,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.camera_alt, color: Colors.green),
+                  onPressed: _handleCameraInput,
+                ),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      return Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(_messages[index]),
-                        ),
-                      );
-                    },
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Type your question...',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  color: Colors.grey[100],
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.mic, color: Colors.green),
-                        onPressed: _handleVoiceInput,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.camera_alt, color: Colors.green),
-                        onPressed: _handleCameraInput,
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          decoration: const InputDecoration(
-                            hintText: 'Type your question...',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: _sendMessage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
-                        ),
-                        child: const Icon(Icons.send, color: Colors.white),
-                      ),
-                    ],
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _sendMessage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
                   ),
+                  child: const Icon(Icons.send, color: Colors.white),
                 ),
               ],
-            )
-          : _dummyScreens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: Colors.green[800],
-        unselectedItemColor: Colors.grey,
-        onTap: _onBottomNavTap,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            ),
+          ),
         ],
       ),
     );
