@@ -1,125 +1,183 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
-class RegistrationScreen extends StatelessWidget {
+
+class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final firstNameController = TextEditingController();
-    final lastNameController = TextEditingController();
-    String fullPhoneNumber = "";
+  State<RegistrationScreen> createState() => _RegistrationScreenState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Registration"),
-        backgroundColor: Colors.green[700],
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: Color(0xFFDFF5D1),
-          image: DecorationImage(
-            image: AssetImage("assets/images/kisan_image.png"),
-            fit: BoxFit.cover,
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  String _fullPhoneNumber = '';
+
+  void _register() {
+    final first = firstNameController.text.trim();
+    final last = lastNameController.text.trim();
+    final phone = _fullPhoneNumber.trim();
+
+    if (first.isEmpty || last.isEmpty || phone.isEmpty || phone.length <= 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Please fill all fields correctly",
+            style: TextStyle(color: Colors.white),
           ),
+          backgroundColor: Colors.redAccent,
         ),
-        child: Container(
-          color: Colors.white.withOpacity(0.8),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 30),
-                Image.asset("assets/images/kisan_logo.png", height: 100),
-                const SizedBox(height: 20),
-                const Text(
-                  "Farmer Registration",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: 30),
+      );
+      return;
+    }
 
-                TextField(
-                  controller: firstNameController,
-                  decoration: const InputDecoration(
-                    labelText: "First Name",
-                    filled: true,
-                    fillColor: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 10),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Registration Successful!",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+    Navigator.pop(context);
+  }
 
-                TextField(
-                  controller: lastNameController,
-                  decoration: const InputDecoration(
-                    labelText: "Last Name",
-                    filled: true,
-                    fillColor: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // ✅ Replaced with intl_phone_field
-                IntlPhoneField(
-                  decoration: const InputDecoration(
-                    labelText: "Mobile Number",
-                    filled: true,
-                    fillColor: Colors.white70,
-                    border: OutlineInputBorder(),
-                  ),
-                  initialCountryCode: 'IN',
-                  onChanged: (phone) {
-                    fullPhoneNumber = phone.completeNumber;
-                  },
-                ),
-
-                const SizedBox(height: 30),
-
-                ElevatedButton(
-                  onPressed: () {
-                    if (fullPhoneNumber.isNotEmpty && fullPhoneNumber.length > 8) {
-                      Navigator.pop(context); // Go back to login
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Registration Successful!",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Please enter a valid mobile number",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[800],
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    "Register",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/farmer.jpg',
+              fit: BoxFit.cover,
+              color: Colors.black.withOpacity(0.4),
+              colorBlendMode: BlendMode.darken,
             ),
           ),
-        ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Circular logo
+                            ClipOval(
+                              child: Image.asset(
+                                'assets/images/kisan_image.png',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              "Farmer Registration",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 40),
+
+                            // Constrained form inputs
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextField(
+                                    controller: firstNameController,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      labelText: "First Name",
+                                      labelStyle: const TextStyle(color: Colors.white),
+                                      filled: true,
+                                      fillColor: Colors.white.withOpacity(0.2),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: lastNameController,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      labelText: "Last Name",
+                                      labelStyle: const TextStyle(color: Colors.white),
+                                      filled: true,
+                                      fillColor: Colors.white.withOpacity(0.2),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  
+IntlPhoneField(
+  decoration: const InputDecoration(
+    labelText: "Mobile Number",
+    filled: true,
+    fillColor: Colors.white70,
+    border: OutlineInputBorder(),
+  ),
+  initialCountryCode: 'IN',
+  keyboardType: TextInputType.phone,
+  onChanged: (phone) {
+    _fullPhoneNumber = phone.completeNumber;
+  },
+),
+
+                                  const SizedBox(height: 24),
+                                  ElevatedButton(
+                                    onPressed: _register,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green[800],
+                                      minimumSize: const Size.fromHeight(48),
+                                    ),
+                                    child: const Text(
+                                      "Register",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      "Back to Login",
+                                      style: TextStyle(
+                                        color: Colors.lightBlueAccent,
+                                        decoration: TextDecoration.underline,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
