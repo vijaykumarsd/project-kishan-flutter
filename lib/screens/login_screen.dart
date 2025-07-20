@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'registration_screen.dart';
 import 'welcome_screen.dart';
 
@@ -14,24 +15,126 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _fullPhoneNumber = '';
 
-  void _login() {
-    if (_fullPhoneNumber.isNotEmpty && _fullPhoneNumber.length > 8) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Invalid mobile number",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.redAccent,
+void _login() async {
+  if (_fullPhoneNumber.isNotEmpty && _fullPhoneNumber.length > 8) {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: _fullPhoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        // Auto-verification on some devices (rare)
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        _goToWelcomeScreen();
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Verification Failed: ${e.message}")),
+        );
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        _showOTPDialog(verificationId);
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Invalid mobile number",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
+}
+
+void _showOTPDialog(String verificationId) {
+  List<TextEditingController> controllers =
+      List.generate(6, (_) => TextEditingController());
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Enter OTP"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(6, (index) {
+                return SizedBox(
+                  width: 40,
+                  child: TextField(
+                    controller: controllers[index],
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 1,
+                    decoration: const InputDecoration(
+                      counterText: "",
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      if (value.isNotEmpty && index < 5) {
+                        FocusScope.of(context).nextFocus();
+                      }
+                    },
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  final smsCode = controllers.map((c) => c.text).join();
+                  if (smsCode.length == 6) {
+                    final credential = PhoneAuthProvider.credential(
+                      verificationId: verificationId,
+                      smsCode: smsCode,
+                    );
+
+                    try {
+                      await FirebaseAuth.instance.signInWithCredential(credential);
+                      Navigator.pop(context); // Close dialog
+                      _goToWelcomeScreen();   // Go to next screen
+                    } catch (e) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("OTP Verification Failed: ${e.toString()}"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please enter all 6 digits of the OTP"),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                },
+                child: const Text("Verify"),
+              ),
+            ),
+          ],
         ),
       );
-    }
-  }
+    },
+  );
+}
+
+// ✅ Navigate to Welcome Screen after OTP login
+void _goToWelcomeScreen() {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+  );
+}
+
+
 
   @override
   Widget build(BuildContext context) {
