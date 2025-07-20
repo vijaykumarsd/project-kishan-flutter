@@ -1,16 +1,16 @@
-
 import 'package:flutter/material.dart';
+import 'home_screen.dart';
 
 class SharedScaffold extends StatelessWidget {
-  final String title;
   final Widget body;
+  final String title;
   final int currentIndex;
-  final Function(int) onTabTapped;
+  final void Function(int) onTabTapped;
 
   const SharedScaffold({
     super.key,
-    required this.title,
     required this.body,
+    required this.title,
     required this.currentIndex,
     required this.onTabTapped,
   });
@@ -21,24 +21,24 @@ class SharedScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         backgroundColor: Colors.green[700],
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Row(
-              children: const [
-                Text(
-                  "Ramu",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundImage: AssetImage('assets/images/farmer_icon.png'),
-                  radius: 18,
-                ),
-              ],
-            ),
-          )
-        ],
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.only(right: 16.0),
+        //     child: Row(
+        //       children: [
+        //         const Text(
+        //           "Ramu",
+        //           style: TextStyle(fontSize: 16, color: Colors.white),
+        //         ),
+        //         const SizedBox(width: 8),
+        //         const CircleAvatar(
+        //           backgroundImage: AssetImage('assets/images/farmer_icon.png'),
+        //           radius: 18,
+        //         ),
+        //       ],
+        //     ),
+        //   )
+        // ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -64,9 +64,22 @@ class SharedScaffold extends StatelessWidget {
               ),
               decoration: const BoxDecoration(color: Colors.green),
             ),
-            const ListTile(leading: Icon(Icons.home), title: Text("Home")),
-            const ListTile(leading: Icon(Icons.settings), title: Text("Settings")),
-            const ListTile(leading: Icon(Icons.logout), title: Text("Logout")),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text("Home"),
+              onTap: () {
+                Navigator.pop(context);
+                onTabTapped(0);
+              },
+            ),
+            const ListTile(
+              leading: Icon(Icons.settings),
+              title: Text("Settings"),
+            ),
+            const ListTile(
+              leading: Icon(Icons.logout),
+              title: Text("Logout"),
+            ),
           ],
         ),
       ),
@@ -75,9 +88,30 @@ class SharedScaffold extends StatelessWidget {
         currentIndex: currentIndex,
         selectedItemColor: Colors.green[800],
         unselectedItemColor: Colors.grey,
-        onTap: onTabTapped,
+        onTap: (index) {
+          Navigator.pop(context);
+          switch (index) {
+            case 0:
+            Navigator.push(
+  context,
+  MaterialPageRoute(builder: (context) => HomeScreen()),
+);
+
+              // Navigator.pushNamed(context, '/agent_screen');
+              // Navigator.pushReplacement(
+              //     context,
+              //     MaterialPageRoute(builder: (_) => const HomeScreen()),
+              //   );
+              break;
+            case 3:
+              Navigator.pushNamed(context, '/profile_update_screen');
+              break;
+            default:
+              onTabTapped(index);
+          }
+        },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          BottomNavigationBarItem(icon: Icon(Icons.assistant_outlined), label: 'AI Assitant'),
           BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

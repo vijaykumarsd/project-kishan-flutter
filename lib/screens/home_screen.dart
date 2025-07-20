@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'agent_screen.dart';
+import 'shared_scaffold.dart'; // Import the shared scaffold
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +11,43 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+
+  // Titles for the AppBar corresponding to each tab
+  final List<String> _titles = const [
+    'Dashboard',
+    'Messages',
+    'Alerts',
+    'Profile',
+  ];
+
+  // The list of screens to be displayed for each tab
+  final List<Widget> _screens = [
+    const DashboardContent(), // Your original home screen content
+    const Center(child: Text('Messages Screen')), // Placeholder for Messages
+    const Center(child: Text('Alerts Screen')),    // Placeholder for Alerts
+    const Center(child: Text('Profile Screen')),   // Placeholder for Profile
+  ];
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SharedScaffold(
+      title: _titles[_currentIndex],
+      currentIndex: _currentIndex,
+      onTabTapped: _onTabTapped,
+      body: _screens[_currentIndex],
+    );
+  }
+}
+
+// The original body content of your HomeScreen
+class DashboardContent extends StatelessWidget {
+  const DashboardContent({super.key});
 
   void _navigateTo(BuildContext context, String title) {
     Navigator.push(
@@ -51,127 +88,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  final List<Widget> _screens = [
-    const Placeholder(),
-    const Placeholder(),
-    const Placeholder(),
-    const Placeholder(),
-  ];
-
-  void _onTabTapped(int index) {
-    setState(() => _currentIndex = index);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        backgroundColor: Colors.green[700],
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Row(
-              children: [
-                const Text(
-                  "Ramu",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                const SizedBox(width: 8),
-                const CircleAvatar(
-                  backgroundImage: AssetImage('assets/images/farmer_icon.png'),
-                  radius: 18,
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/truck.jpg', // Ensure this image exists in your assets
+            fit: BoxFit.cover,
+            color: Colors.black.withOpacity(0.3),
+            colorBlendMode: BlendMode.darken,
+          ),
+        ),
+        ListView(
+          padding: const EdgeInsets.symmetric(vertical: 40),
           children: [
-            UserAccountsDrawerHeader(
-              accountName: const Text("Vijay Kumar"),
-              accountEmail: const Text("vijay@example.com"),
-              currentAccountPicture: CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.transparent,
-                child: ClipOval(
-                  child: Image.network(
-                    "https://i.pravatar.cc/150?img=3",
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.asset('assets/images/user.png', fit: BoxFit.cover);
-                    },
-                    fit: BoxFit.cover,
-                    width: 60,
-                    height: 60,
-                  ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                "Choose Your Assistant",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-              decoration: const BoxDecoration(color: Colors.green),
             ),
-            const ListTile(
-              leading: Icon(Icons.home),
-              title: Text("Home"),
-            ),
-            const ListTile(
-              leading: Icon(Icons.settings),
-              title: Text("Settings"),
-            ),
-            const ListTile(
-              leading: Icon(Icons.logout),
-              title: Text("Logout"),
-            ),
+            const SizedBox(height: 20),
+            _buildCard(context, 'Agronomist', Icons.agriculture, Colors.green),
+            _buildCard(context, 'Market Analyst', Icons.bar_chart, Colors.orange),
+            _buildCard(context, 'Scheme Navigator', Icons.map, Colors.blue),
           ],
         ),
-      ),
-      body: _currentIndex == 0
-          ? Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.asset(
-                    'assets/images/truck.jpg',
-                    fit: BoxFit.cover,
-                    color: Colors.black.withOpacity(0.3),
-                    colorBlendMode: BlendMode.darken,
-                  ),
-                ),
-                ListView(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Text(
-                        "Choose Your Assistant",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildCard(context, 'Agronomist', Icons.agriculture, Colors.green),
-                    _buildCard(context, 'Market Analyst', Icons.bar_chart, Colors.orange),
-                    _buildCard(context, 'Scheme Navigator', Icons.map, Colors.blue),
-                  ],
-                ),
-              ],
-            )
-          : _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: Colors.green[800],
-        unselectedItemColor: Colors.grey,
-        onTap: _onTabTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
+      ],
     );
   }
 }

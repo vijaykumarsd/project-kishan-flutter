@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'shared_scaffold.dart'; // Import the shared scaffold
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -11,11 +12,22 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   int _currentIndex = 0;
 
+  // Placeholder screens for the other bottom navigation tabs
   final List<Widget> _screens = [
-    const HomeScreen(),
-    Placeholder(), // Replace with actual screen
-    Placeholder(), // Replace with actual screen
-    Placeholder(), // Replace with actual screen
+    // The initial welcome content is handled directly in the body
+    const WelcomeContent(),
+    const Center(child: Text('Messages Screen')),
+    const Center(child: Text('Alerts Screen')),
+    const Center(child: Text('Profile Screen')),
+  ];
+
+  // Titles for the AppBar corresponding to each tab
+  // THE FIX IS HERE: The erroneous 'al_alt_text' line has been removed.
+  final List<String> _titles = const [
+    'Welcome',
+    'Messages',
+    'Alerts',
+    'Profile',
   ];
 
   void _onTabTapped(int index) {
@@ -26,90 +38,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Welcome'),
-        backgroundColor: Colors.green[700],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            const UserAccountsDrawerHeader(
-              accountName: Text("Vijay Kumar"),
-              accountEmail: Text("vijay@example.com"),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage(
-                  'https://i.pravatar.cc/150?img=3', // Sample user photo
-                ),
-              ),
-              decoration: BoxDecoration(
-                color: Colors.green,
+    return SharedScaffold(
+      title: _titles[_currentIndex],
+      currentIndex: _currentIndex,
+      onTabTapped: _onTabTapped,
+      body: _screens[_currentIndex],
+    );
+  }
+}
+
+// Extracted the main content of the welcome screen for clarity
+class WelcomeContent extends StatelessWidget {
+  const WelcomeContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white, // A neutral background for the content
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Welcome to Agri-Assistant',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {
+                // This will replace the WelcomeScreen with the HomeScreen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                );
               },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[800],
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 30),
+              ),
+              child: const Text(
+                'Go to Dashboard',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ],
         ),
-      ),
-      body: _currentIndex == 0
-          ? Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[800],
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 30),
-                ),
-                child: const Text(
-                  'Go to Dashboard',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            )
-          : _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: Colors.green[800],
-        unselectedItemColor: Colors.grey,
-        onTap: _onTabTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Alerts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
