@@ -34,6 +34,25 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   try {
+    // 🔍 Check if phone number already exists
+    final existingUser = await FirebaseFirestore.instance
+        .collection('farmers')
+        .where('phone_number', isEqualTo: phone)
+        .get();
+
+    if (existingUser.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Phone number is already registered.",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    //New User Registation 
     await FirebaseFirestore.instance.collection('farmers').add({
       'first_name': first,
       'last_name': last,
