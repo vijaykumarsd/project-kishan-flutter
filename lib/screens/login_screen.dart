@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'registration_screen.dart';
 import 'welcome_screen.dart';
 
@@ -17,11 +20,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
 void _login() async {
   if (_fullPhoneNumber.isNotEmpty && _fullPhoneNumber.length > 8) {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('farmers')
+        .doc(_fullPhoneNumber)
+        .get();
+
+    if (!snapshot.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Mobile number not found. Please register first."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: _fullPhoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
         // Auto-verification on some devices (rare)
         await FirebaseAuth.instance.signInWithCredential(credential);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('logged_in_phone', _fullPhoneNumber);
         _goToWelcomeScreen();
       },
       verificationFailed: (FirebaseAuthException e) {

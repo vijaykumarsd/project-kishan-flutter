@@ -15,78 +15,95 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final lastNameController = TextEditingController();
   String _fullPhoneNumber = '';
 
-  Future<void> _register() async {
-  final first = firstNameController.text.trim();
-  final last = lastNameController.text.trim();
-  final phone = _fullPhoneNumber.trim();
+  String? _firstNameError;
+  String? _lastNameError;
 
-  if (first.isEmpty || last.isEmpty || phone.isEmpty || phone.length <= 8) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Please fill all fields correctly",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.redAccent,
-      ),
-    );
-    return;
+  bool isValidName(String name) {
+    final nameRegex = RegExp(r'^[a-zA-Z]{2,}$');
+    return nameRegex.hasMatch(name);
   }
 
-  try {
-    // 🔍 Check if phone number already exists
-    final existingUser = await FirebaseFirestore.instance
-        .collection('farmers')
-        .where('phone_number', isEqualTo: phone)
-        .get();
+  void _validateFirstName(String value) {
+    setState(() {
+      _firstNameError = isValidName(value) ? null : 'Enter a valid first name';
+    });
+  }
 
-    if (existingUser.docs.isNotEmpty) {
+  void _validateLastName(String value) {
+    setState(() {
+      _lastNameError = isValidName(value) ? null : 'Enter a valid last name';
+    });
+  }
+
+  Future<void> _register() async {
+    final first = firstNameController.text.trim();
+    final last = lastNameController.text.trim();
+    final phone = _fullPhoneNumber.trim();
+
+    // Final validation
+    if (!isValidName(first) || !isValidName(last) || phone.isEmpty || phone.length <= 8) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            "Phone number is already registered.",
+            "Please enter a valid name and phone number.",
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.redAccent,
         ),
       );
       return;
     }
-    //New User Registation 
-    await FirebaseFirestore.instance.collection('farmers').add({
-      'first_name': first,
-      'last_name': last,
-      'phone_number': phone,
-      'registered_at': Timestamp.now(),
-    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Registration Successful!",
-          style: TextStyle(color: Colors.white),
+    try {
+      final docRef = FirebaseFirestore.instance.collection('farmers').doc(phone);
+      final existingDoc = await docRef.get();
+
+      if (existingDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Phone number already registered.",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      await docRef.set({
+        'first_name': first,
+        'last_name': last,
+        'phone_number': phone,
+        'registered_at': Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Registration Successful!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
         ),
-        backgroundColor: Colors.green,
-      ),
-    );
-    Navigator.pop(context);
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Error: ${e.toString()}"),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-}
+      );
 
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Background image
           Positioned.fill(
             child: Image.asset(
               'assets/images/farmer.jpg',
@@ -107,7 +124,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Circular logo
                             ClipOval(
                               child: Image.asset(
                                 'assets/images/kisan_image.png',
@@ -127,8 +143,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 40),
-
-                            // Constrained form inputs
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 400),
                               child: Column(
@@ -136,9 +150,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 children: [
                                   TextField(
                                     controller: firstNameController,
+                                    onChanged: _validateFirstName,
                                     style: const TextStyle(color: Colors.white),
                                     decoration: InputDecoration(
                                       labelText: "First Name",
+                                      errorText: _firstNameError,
                                       labelStyle: const TextStyle(color: Colors.white),
                                       filled: true,
                                       fillColor: Colors.white.withOpacity(0.2),
@@ -150,9 +166,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   const SizedBox(height: 16),
                                   TextField(
                                     controller: lastNameController,
+                                    onChanged: _validateLastName,
                                     style: const TextStyle(color: Colors.white),
                                     decoration: InputDecoration(
                                       labelText: "Last Name",
+                                      errorText: _lastNameError,
                                       labelStyle: const TextStyle(color: Colors.white),
                                       filled: true,
                                       fillColor: Colors.white.withOpacity(0.2),
@@ -162,21 +180,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  
-IntlPhoneField(
-  decoration: const InputDecoration(
-    labelText: "Mobile Number",
-    filled: true,
-    fillColor: Colors.white70,
-    border: OutlineInputBorder(),
-  ),
-  initialCountryCode: 'IN',
-  keyboardType: TextInputType.phone,
-  onChanged: (phone) {
-    _fullPhoneNumber = phone.completeNumber;
-  },
-),
-
+                                  IntlPhoneField(
+                                    decoration: const InputDecoration(
+                                      labelText: "Mobile Number",
+                                      filled: true,
+                                      fillColor: Colors.white70,
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    initialCountryCode: 'IN',
+                                    keyboardType: TextInputType.phone,
+                                    onChanged: (phone) {
+                                      _fullPhoneNumber = phone.completeNumber;
+                                    },
+                                  ),
                                   const SizedBox(height: 24),
                                   ElevatedButton(
                                     onPressed: _register,
