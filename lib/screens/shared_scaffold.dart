@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'profile_update_screen.dart';
 
 class SharedScaffold extends StatelessWidget {
   final Widget body;
@@ -92,19 +93,16 @@ class SharedScaffold extends StatelessWidget {
           Navigator.pop(context);
           switch (index) {
             case 0:
-            Navigator.push(
-  context,
-  MaterialPageRoute(builder: (context) => HomeScreen()),
-);
-
-              // Navigator.pushNamed(context, '/agent_screen');
-              // Navigator.pushReplacement(
-              //     context,
-              //     MaterialPageRoute(builder: (_) => const HomeScreen()),
-              //   );
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
               break;
             case 3:
-              Navigator.pushNamed(context, '/profile_update_screen');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileUpdateScreen()),
+              );
               break;
             default:
               onTabTapped(index);

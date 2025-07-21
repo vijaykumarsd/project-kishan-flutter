@@ -9,24 +9,30 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  font_awesome_flutter: ^10.5.0
-  country_picker: ^2.0.27
-  phone_number: ^2.1.0
-  intl_phone_field: ^3.2.0
+
+  # UI and Utility Packages
+  font_awesome_flutter: ^10.8.0        # Latest as of Nov 2024 [1](https://github.com/fluttercommunity/font_awesome_flutter/releases)
+  country_picker: ^2.0.27              # Latest confirmed[3](https://github.com/Daniel-Ioannou/flutter_country_picker)
+  phone_number: ^2.1.0                 # No newer version found
+  intl_phone_field: ^3.2.0             # No newer version found
+  shared_preferences: ^2.2.2           # No newer version found
+
+  # Firebase Packages
+  firebase_core: ^3.15.0               # Latest as of July 2025[2](https://firebase.google.com/support/release-notes/flutter)
+  cloud_firestore: ^5.6.9              # Latest as of June 2025 [2](https://firebase.google.com/support/release-notes/flutter)
+  firebase_auth: ^5.6.0                # Latest as of July 2025 [2](https://firebase.google.com/support/release-notes/flutter)
+  firebase_storage: ^12.4.8            # Latest as of July 2025 [2](https://firebase.google.com/support/release-notes/flutter)
+
+  # Device Features
+  speech_to_text: ^6.4.0               # No newer version found
+  image_picker: ^1.1.2                 # No newer version found
+  permission_handler: ^11.3.1          # No newer version found
+  flutter_tts: ^4.0.2                  # No newer version found
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  speech_to_text: ^6.4.0
-  image_picker: ^1.0.4
-  permission_handler: ^11.3.1
-  flutter_tts: ^4.0.2
-  firebase_core: ^2.30.0
-  cloud_firestore: ^4.17.2
-  firebase_auth: ^4.17.8
-  shared_preferences: ^2.2.2
-
 
 flutter:
   uses-material-design: true
@@ -37,4 +43,3 @@ flutter:
     - assets/images/farmer.jpg
     - assets/images/truck.jpg
     - assets/images/farmer_icon.png
-
