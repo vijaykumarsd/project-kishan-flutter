@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import the package
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+
 import 'home_screen.dart';
 import 'profile_update_screen.dart';
-import 'app_localizations.dart'; // Import AppLocalizations
+import 'app_localizations.dart';
+import 'login_screen.dart'; // Import LoginScreen
 
 class SharedScaffold extends StatefulWidget {
   final Widget body;
@@ -24,52 +27,45 @@ class SharedScaffold extends StatefulWidget {
 }
 
 class _SharedScaffoldState extends State<SharedScaffold> {
-  // The future now holds a nullable DocumentSnapshot
   late Future<DocumentSnapshot?> _userDataFuture;
-  AppLocalizations? _appStrings; // Added AppLocalizations instance
-  String _selectedLanguage = 'en'; // Track selected language
+  AppLocalizations? _appStrings;
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
-    _loadSelectedLanguageAndUserData(); // Load language and user data
+    _loadSelectedLanguageAndUserData();
   }
 
-  // Load selected language from SharedPreferences and then user data.
   Future<void> _loadSelectedLanguageAndUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final String? savedLanguage = prefs.getString('app_language');
     setState(() {
       _selectedLanguage = savedLanguage ?? 'en';
     });
-    await _loadAppStrings(_selectedLanguage); // Load strings for the selected language
-    _userDataFuture = _fetchUserData(); // Then fetch user data
-    setState(() {}); // Trigger rebuild after data is ready
+    await _loadAppStrings(_selectedLanguage);
+    _userDataFuture = _fetchUserData();
+    setState(() {});
   }
 
-  // Asynchronously loads the AppLocalizations for a given locale.
   Future<void> _loadAppStrings(String locale) async {
     final loadedStrings = await AppLocalizations.load(locale);
     setState(() {
-      _appStrings = loadedStrings; // Update the localized strings
+      _appStrings = loadedStrings;
     });
   }
 
-  // Fetches the phone number from SharedPreferences and then gets the user document
   Future<DocumentSnapshot?> _fetchUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Fetch the phone number using the key 'logged_in_phone'
-      // final String? phoneNumber = prefs.getString('logged_in_phone');
-      final String? phoneNumber = "+919566859696"; // Using the hardcoded number for demonstration as per previous files
+      final String? phoneNumber = prefs.getString('logged_in_phone');
+      // Using the hardcoded number for demonstration as per previous files if needed
+      // final String? phoneNumber = "+919566859696"; 
 
-      // If no phone number is found, return null to prevent errors
       if (phoneNumber == null || phoneNumber.isEmpty) {
         print("Phone number not found in local storage.");
         return null;
       }
-
-      // Use the retrieved phone number to fetch data from Firestore
       return await FirebaseFirestore.instance.collection('farmers').doc(phoneNumber).get();
     } catch (e) {
       print("Error fetching user data: $e");
@@ -77,16 +73,47 @@ class _SharedScaffoldState extends State<SharedScaffold> {
     }
   }
 
+  // --- New Logout Method ---
+  Future<void> _logout() async {
+    try {
+      // Sign out from Firebase Authentication
+      await FirebaseAuth.instance.signOut();
+
+      // Clear the logged_in_phone from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('logged_in_phone');
+      print("User logged out and phone number cleared from SharedPreferences.");
+
+      // Navigate to the LoginScreen and remove all previous routes
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (Route<dynamic> route) => false, // This ensures all previous routes are removed
+        );
+      }
+    } catch (e) {
+      print("Error during logout: $e");
+      // Optionally show a SnackBar or dialog to the user about logout failure
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_appStrings!.get("error") + " " + e.toString()), // Localized error message
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Show a loading indicator if appStrings are not yet loaded
     if (_appStrings == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    // The FutureBuilder's type is updated to handle a nullable snapshot
     return FutureBuilder<DocumentSnapshot?>(
       future: _userDataFuture,
       builder: (context, snapshot) {
@@ -96,20 +123,16 @@ class _SharedScaffoldState extends State<SharedScaffold> {
           );
         }
 
-        // Check if data exists and the document is found in Firestore
         if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
           final userData = snapshot.data!.data() as Map<String, dynamic>;
           return _buildScaffold(context, userData);
         }
 
-        // If no phone number was found or the document doesn't exist,
-        // build the scaffold with default placeholder data.
         return _buildScaffold(context, null);
       },
     );
   }
 
-  // This helper method remains the same, handling both real and placeholder data
   Widget _buildScaffold(BuildContext context, Map<String, dynamic>? userData) {
     final String firstName = userData?['first_name'] ?? 'User';
     final String lastName = userData?['last_name'] ?? '';
@@ -117,7 +140,6 @@ class _SharedScaffoldState extends State<SharedScaffold> {
     final String email = userData?['email'] ?? 'user@example.com';
     final String? profileImageUrl = userData?['profile_image_url'];
 
-    // Localized titles for bottom navigation bar items
     final List<String> bottomNavLabels = [
       _appStrings!.get('dashboard'),
       _appStrings!.get('messages'),
@@ -127,7 +149,7 @@ class _SharedScaffoldState extends State<SharedScaffold> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title), // AppBar title is passed from parent
+        title: Text(widget.title),
         backgroundColor: Colors.green[700],
         actions: [
           Padding(
@@ -135,7 +157,7 @@ class _SharedScaffoldState extends State<SharedScaffold> {
             child: Row(
               children: [
                 Text(
-                  firstName, // User's name is dynamic, not localized
+                  firstName,
                   style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 const SizedBox(width: 8),
@@ -159,8 +181,8 @@ class _SharedScaffoldState extends State<SharedScaffold> {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(fullName), // User's name is dynamic
-              accountEmail: Text(email), // User's email is dynamic
+              accountName: Text(fullName),
+              accountEmail: Text(email),
               currentAccountPicture: CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.white,
@@ -182,7 +204,7 @@ class _SharedScaffoldState extends State<SharedScaffold> {
             ),
             ListTile(
               leading: const Icon(Icons.home),
-              title: Text(_appStrings!.get("home")), // Localized
+              title: Text(_appStrings!.get("home")),
               onTap: () {
                 Navigator.pop(context);
                 widget.onTabTapped(0);
@@ -190,25 +212,22 @@ class _SharedScaffoldState extends State<SharedScaffold> {
             ),
             ListTile(
               leading: const Icon(Icons.settings),
-              title: Text(_appStrings!.get("settings")), // Localized
+              title: Text(_appStrings!.get("settings")),
               onTap: () {
                 // Handle settings tap
               },
             ),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: Text(_appStrings!.get("logout")), // Localized
-              onTap: () {
-                // Handle logout tap
-              },
+              title: Text(_appStrings!.get("logout")), // Localized logout text
+              onTap: _logout, // Call the new logout method
             ),
-            // Language selection dropdown in the drawer
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: DropdownButtonFormField<String>(
                 value: _selectedLanguage,
                 decoration: InputDecoration(
-                  labelText: _appStrings!.get("select_language"), // Localized label
+                  labelText: _appStrings!.get("select_language"),
                   border: const OutlineInputBorder(),
                   filled: true,
                   fillColor: Colors.grey[200],
@@ -217,11 +236,9 @@ class _SharedScaffoldState extends State<SharedScaffold> {
                   if (newValue != null) {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString('app_language', newValue);
-                    // Reload the entire app to apply language changes
-                    // This is a common approach for full app language changes
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()), // Navigate to a fresh instance
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
                     );
                   }
                 },
