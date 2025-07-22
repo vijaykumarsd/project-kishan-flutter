@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import for SharedPreferences
 
+import 'app_localizations.dart'; // Import the AppLocalizations class
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -18,24 +20,59 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String? _firstNameError;
   String? _lastNameError;
 
+  String _selectedLanguage = 'en'; // Default language
+  AppLocalizations? _appStrings; // Holds the loaded localized strings
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedLanguage(); // Load language when the screen initializes
+  }
+
+  // Asynchronously loads the selected language from SharedPreferences.
+  // If no language is saved, it defaults to 'en' (English).
+  Future<void> _loadSelectedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('app_language') ?? 'en';
+    });
+    await _loadAppStrings(_selectedLanguage); // Load strings for the selected language
+  }
+
+  // Asynchronously loads the AppLocalizations for a given locale.
+  Future<void> _loadAppStrings(String locale) async {
+    final loadedStrings = await AppLocalizations.load(locale);
+    setState(() {
+      _appStrings = loadedStrings; // Update the localized strings
+    });
+  }
+
+  // Validates if the given name matches the regex pattern.
   bool isValidName(String name) {
     final nameRegex = RegExp(r'^[a-zA-Z]{2,}$');
     return nameRegex.hasMatch(name);
   }
 
+  // Validates the first name and sets an error message if invalid.
   void _validateFirstName(String value) {
+    if (_appStrings == null) return;
     setState(() {
-      _firstNameError = isValidName(value) ? null : 'Enter a valid first name';
+      _firstNameError = isValidName(value) ? null : _appStrings!.get('enter_valid_first_name');
     });
   }
 
+  // Validates the last name and sets an error message if invalid.
   void _validateLastName(String value) {
+    if (_appStrings == null) return;
     setState(() {
-      _lastNameError = isValidName(value) ? null : 'Enter a valid last name';
+      _lastNameError = isValidName(value) ? null : _appStrings!.get('enter_valid_last_name');
     });
   }
 
+  // Handles the registration process, including validation and Firestore interaction.
   Future<void> _register() async {
+    if (_appStrings == null) return; // Ensure strings are loaded
+
     final first = firstNameController.text.trim();
     final last = lastNameController.text.trim();
     final phone = _fullPhoneNumber.trim();
@@ -43,10 +80,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     // Final validation
     if (!isValidName(first) || !isValidName(last) || phone.isEmpty || phone.length <= 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Please enter a valid name and phone number.",
-            style: TextStyle(color: Colors.white),
+            _appStrings!.get("enter_valid_name_phone"),
+            style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -60,10 +97,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (existingDoc.exists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              "Phone number already registered.",
-              style: TextStyle(color: Colors.white),
+              _appStrings!.get("phone_already_registered"),
+              style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.orange,
           ),
@@ -79,10 +116,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "Registration Successful!",
-            style: TextStyle(color: Colors.white),
+            _appStrings!.get("registration_successful"),
+            style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.green,
         ),
@@ -92,7 +129,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Error: ${e.toString()}"),
+          content: Text("${_appStrings!.get("error")} ${e.toString()}"),
           backgroundColor: Colors.red,
         ),
       );
@@ -101,9 +138,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show a loading indicator or empty container if strings are not yet loaded.
+    if (_appStrings == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         children: [
+          // Full background image with dark overlay.
           Positioned.fill(
             child: Image.asset(
               'assets/images/farmer.jpg',
@@ -112,6 +159,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               colorBlendMode: BlendMode.darken,
             ),
           ),
+          // Responsive, scrollable foreground content.
           LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
@@ -124,6 +172,38 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            // Language selection dropdown.
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: DropdownButton<String>(
+                                value: _selectedLanguage,
+                                icon: const Icon(Icons.language, color: Colors.white),
+                                underline: Container(), // Remove underline
+                                onChanged: (String? newValue) async {
+                                  if (newValue != null) {
+                                    setState(() {
+                                      _selectedLanguage = newValue;
+                                    });
+                                    final prefs = await SharedPreferences.getInstance();
+                                    await prefs.setString('app_language', newValue); // Save selected language
+                                    await _loadAppStrings(newValue); // Reload strings for new language
+                                  }
+                                },
+                                items: AppLocalizations.supportedLocales
+                                    .map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      AppLocalizations.getLanguageName(value),
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                  );
+                                }).toList(),
+                                dropdownColor: Colors.black54, // Dark background for dropdown
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // Circular App Logo.
                             ClipOval(
                               child: Image.asset(
                                 'assets/images/kisan_image.png',
@@ -133,9 +213,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            const Text(
-                              "Farmer Registration",
-                              style: TextStyle(
+                            // Farmer Registration title, now localized.
+                            Text(
+                              _appStrings!.get("farmer_registration"),
+                              style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -143,6 +224,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 40),
+                            // Constrained input fields and buttons.
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 400),
                               child: Column(
@@ -153,7 +235,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     onChanged: _validateFirstName,
                                     style: const TextStyle(color: Colors.white),
                                     decoration: InputDecoration(
-                                      labelText: "First Name",
+                                      labelText: _appStrings!.get("first_name"), // Localized label
                                       errorText: _firstNameError,
                                       labelStyle: const TextStyle(color: Colors.white),
                                       filled: true,
@@ -169,7 +251,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     onChanged: _validateLastName,
                                     style: const TextStyle(color: Colors.white),
                                     decoration: InputDecoration(
-                                      labelText: "Last Name",
+                                      labelText: _appStrings!.get("last_name"), // Localized label
                                       errorText: _lastNameError,
                                       labelStyle: const TextStyle(color: Colors.white),
                                       filled: true,
@@ -181,11 +263,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   IntlPhoneField(
-                                    decoration: const InputDecoration(
-                                      labelText: "Mobile Number",
+                                    decoration: InputDecoration(
+                                      labelText: _appStrings!.get("mobile_number"), // Localized label
                                       filled: true,
                                       fillColor: Colors.white70,
-                                      border: OutlineInputBorder(),
+                                      border: const OutlineInputBorder(),
                                     ),
                                     initialCountryCode: 'IN',
                                     keyboardType: TextInputType.phone,
@@ -200,17 +282,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       backgroundColor: Colors.green[800],
                                       minimumSize: const Size.fromHeight(48),
                                     ),
-                                    child: const Text(
-                                      "Register",
-                                      style: TextStyle(color: Colors.white),
+                                    child: Text(
+                                      _appStrings!.get("register"), // Localized button text
+                                      style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text(
-                                      "Back to Login",
-                                      style: TextStyle(
+                                    child: Text(
+                                      _appStrings!.get("back_to_login"), // Localized link text
+                                      style: const TextStyle(
                                         color: Colors.lightBlueAccent,
                                         decoration: TextDecoration.underline,
                                         fontWeight: FontWeight.w600,

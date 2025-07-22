@@ -4,7 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:typed_data';
 
-import 'shared_scaffold.dart'; // Import the shared scaffold
+import 'shared_scaffold.dart';
+import 'app_localizations.dart'; // Import AppLocalizations
+import 'package:shared_preferences/shared_preferences.dart'; // Import for SharedPreferences
 
 class ProfileUpdateScreen extends StatefulWidget {
   // Hardcoded phone number for demonstration
@@ -17,38 +19,83 @@ class ProfileUpdateScreen extends StatefulWidget {
 
 class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
   int _currentIndex = 3; // Set to 3 to highlight the 'Profile' tab
+  AppLocalizations? _appStrings; // Added AppLocalizations instance
+  String _selectedLanguage = 'en'; // Track selected language
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedLanguage(); // Load language when the screen initializes
+  }
+
+  // Asynchronously loads the selected language from SharedPreferences.
+  Future<void> _loadSelectedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('app_language') ?? 'en';
+    });
+    await _loadAppStrings(_selectedLanguage); // Load strings for the selected language
+  }
+
+  // Asynchronously loads the AppLocalizations for a given locale.
+  Future<void> _loadAppStrings(String locale) async {
+    final loadedStrings = await AppLocalizations.load(locale);
+    setState(() {
+      _appStrings = loadedStrings; // Update the localized strings
+    });
+  }
+
+  // Titles for the AppBar corresponding to each tab, now localized
+  List<String> _getTitles() {
+    if (_appStrings == null) {
+      return const ['Loading...', 'Loading...', 'Loading...', 'Loading...'];
+    }
+    return [
+      _appStrings!.get('dashboard'),
+      _appStrings!.get('messages'),
+      _appStrings!.get('alerts'),
+      _appStrings!.get('update_profile'), // Localized title for profile screen
+    ];
+  }
 
   // This will manage the screen's body when using the bottom navigation
-  // Note: This architecture places the main navigation on every screen as requested.
-  final List<Widget> _screens = [
-    const Center(child: Text('Dashboard Screen')), // Placeholder
-    const Center(child: Text('Messages Screen')),  // Placeholder
-    const Center(child: Text('Alerts Screen')),    // Placeholder
-    const ProfileUpdateForm(), // The actual profile form content
-  ];
-
-  final List<String> _titles = const [
-    'Dashboard',
-    'Messages',
-    'Alerts',
-        'Update Profile', // Title for the profile screen
-  ];
+  List<Widget> _getScreens() {
+    if (_appStrings == null) {
+      return [
+        const Center(child: CircularProgressIndicator()),
+        const Center(child: CircularProgressIndicator()),
+        const Center(child: CircularProgressIndicator()),
+        const Center(child: CircularProgressIndicator()),
+      ];
+    }
+    return [
+      Center(child: Text(_appStrings!.get('dashboard') + ' ' + _appStrings!.get('profile'))), // Placeholder localized
+      Center(child: Text(_appStrings!.get('messages') + ' ' + _appStrings!.get('profile'))),  // Placeholder localized
+      Center(child: Text(_appStrings!.get('alerts') + ' ' + _appStrings!.get('profile'))),    // Placeholder localized
+      ProfileUpdateForm(appStrings: _appStrings!), // Pass appStrings to ProfileUpdateForm
+    ];
+  }
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
-    // In a real app, you might navigate here instead of just changing the body
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    if (_appStrings == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     // The SharedScaffold now provides the AppBar, Drawer, and BottomNavigationBar
     return SharedScaffold(
-      title: _titles[_currentIndex],
+      title: _getTitles()[_currentIndex],
       currentIndex: _currentIndex,
       onTabTapped: _onTabTapped,
-      body: _screens[_currentIndex],
+      body: _getScreens()[_currentIndex],
     );
   }
 }
@@ -56,8 +103,10 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
 
 // The original content of the screen is now extracted into its own widget
 class ProfileUpdateForm extends StatefulWidget {
-  final String phoneNumber = "+919566859696"; // You may need to pass this in
-  const ProfileUpdateForm({super.key});
+  final String phoneNumber; // You may need to pass this in
+  final AppLocalizations appStrings; // Receive AppLocalizations
+
+  const ProfileUpdateForm({super.key, this.phoneNumber = "+919566859696", required this.appStrings});
 
   @override
   State<ProfileUpdateForm> createState() => _ProfileUpdateFormState();
@@ -77,12 +126,22 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
   Uint8List? imageBytes;
   String? imageUrl;
 
-  final List<String> genderOptions = ['Male', 'Female', 'Other'];
+  // Define the consistent, language-agnostic keys for gender
+  final List<String> _genderKeys = ['male', 'female', 'other'];
+
+  // This list will hold the localized display strings for gender
+  late List<String> _localizedGenderOptions;
 
   @override
   void initState() {
     super.initState();
+    _loadLocalizedGenderOptions(); // Initialize localized options first
     _loadProfileData();
+  }
+
+  // Load localized gender options based on current appStrings
+  void _loadLocalizedGenderOptions() {
+    _localizedGenderOptions = _genderKeys.map((key) => widget.appStrings.get(key)).toList();
   }
 
   Future<void> _loadProfileData() async {
@@ -103,7 +162,16 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
             stateController.text = data['state'] ?? '';
             cityController.text = data['city'] ?? '';
             pincodeController.text = data['pincode'] ?? '';
-            selectedGender = data['gender'];
+
+            // Retrieve the stored gender key (e.g., 'male', 'female')
+            String? storedGenderKey = data['gender']?.toLowerCase();
+            if (storedGenderKey != null && _genderKeys.contains(storedGenderKey)) {
+              // If the stored key is valid, get its localized version for display
+              selectedGender = widget.appStrings.get(storedGenderKey);
+            } else {
+              selectedGender = null; // No valid gender stored or found
+            }
+
             imageUrl = data['profile_image_url'];
             if (data['date_of_birth'] != null) {
               selectedDate = (data['date_of_birth'] as Timestamp).toDate();
@@ -116,7 +184,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
       if(mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Failed to load profile data: ${e.toString()}"),
+            content: Text("${widget.appStrings.get("failed_to_load_profile")} ${e.toString()}"), // Localized
             backgroundColor: Colors.red,
           ),
         );
@@ -162,7 +230,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Image upload failed: ${e.toString()}"),
+            content: Text("${widget.appStrings.get("image_upload_failed")} ${e.toString()}"), // Localized
             backgroundColor: Colors.red,
           ),
         );
@@ -189,6 +257,24 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
       final docRef = FirebaseFirestore.instance
           .collection('farmers')
           .doc(widget.phoneNumber);
+
+      // Find the English key for the selected localized gender
+      String? genderKeyToSave;
+      if (selectedGender != null) {
+        // Find the index of the selected localized gender
+        int? selectedIndex;
+        for (int i = 0; i < _localizedGenderOptions.length; i++) {
+          if (_localizedGenderOptions[i] == selectedGender) {
+            selectedIndex = i;
+            break;
+          }
+        }
+        // If found, use the corresponding English key
+        if (selectedIndex != null) {
+          genderKeyToSave = _genderKeys[selectedIndex];
+        }
+      }
+
       await docRef.set({ // Using .set with merge:true is safer
         'first_name': firstNameController.text.trim(),
         'last_name': lastNameController.text.trim(),
@@ -198,7 +284,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
         'state': stateController.text.trim(),
         'city': cityController.text.trim(),
         'pincode': pincodeController.text.trim(),
-        'gender': selectedGender,
+        'gender': genderKeyToSave, // Save the English key to Firestore
         'date_of_birth':
             selectedDate != null ? Timestamp.fromDate(selectedDate!) : null,
         'updated_at': Timestamp.now(),
@@ -206,9 +292,9 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text("Profile Updated Successfully!", style: TextStyle(color: Colors.white)),
+                Text(widget.appStrings.get("profile_updated_successfully"), style: const TextStyle(color: Colors.white)), // Localized
             backgroundColor: Colors.green,
           ),
         );
@@ -217,7 +303,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Error updating profile: ${e.toString()}"),
+            content: Text("${widget.appStrings.get("error_updating_profile")} ${e.toString()}"), // Localized
             backgroundColor: Colors.red,
           ),
         );
@@ -227,7 +313,6 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
 
   @override
   Widget build(BuildContext context) {
-    // This is the original body of your screen
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -266,30 +351,30 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
               IconButton(
                 icon: const Icon(Icons.camera_alt),
                 onPressed: () => _pickImage(ImageSource.camera),
-                tooltip: "Take a picture",
+                tooltip: widget.appStrings.get("take_a_picture"), // Localized
               ),
               IconButton(
                 icon: const Icon(Icons.photo_library),
                 onPressed: () => _pickImage(ImageSource.gallery),
-                tooltip: "Choose from gallery",
+                tooltip: widget.appStrings.get("choose_from_gallery"), // Localized
               ),
             ],
           ),
           const SizedBox(height: 16),
-          TextField(controller: firstNameController, decoration: const InputDecoration(labelText: "First Name")),
+          TextField(controller: firstNameController, decoration: InputDecoration(labelText: widget.appStrings.get("first_name"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: lastNameController, decoration: const InputDecoration(labelText: "Last Name")),
+          TextField(controller: lastNameController, decoration: InputDecoration(labelText: widget.appStrings.get("last_name"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: mobileController, decoration: const InputDecoration(labelText: "Mobile Number")),
+          TextField(controller: mobileController, decoration: InputDecoration(labelText: widget.appStrings.get("mobile_number"))), // Localized
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: selectedGender,
-            items: genderOptions.map((gender) => DropdownMenuItem(
+            items: _localizedGenderOptions.map((gender) => DropdownMenuItem( // Use localized options
               value: gender,
               child: Text(gender),
             )).toList(),
             onChanged: (value) => setState(() => selectedGender = value),
-            decoration: const InputDecoration(labelText: "Gender"),
+            decoration: InputDecoration(labelText: widget.appStrings.get("gender")), // Localized
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -298,25 +383,25 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
             controller: TextEditingController(
               text: selectedDate != null ? "${selectedDate!.toLocal()}".split(' ')[0] : ""
             ),
-            decoration: const InputDecoration(
-              labelText: "Date of Birth",
-              hintText: "Select Date",
+            decoration: InputDecoration(
+              labelText: widget.appStrings.get("date_of_birth"), // Localized
+              hintText: widget.appStrings.get("select_date"), // Localized
             ),
           ),
           const SizedBox(height: 16),
-          TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
+          TextField(controller: emailController, decoration: InputDecoration(labelText: widget.appStrings.get("email"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: addressController, decoration: const InputDecoration(labelText: "Address")),
+          TextField(controller: addressController, decoration: InputDecoration(labelText: widget.appStrings.get("address"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: stateController, decoration: const InputDecoration(labelText: "State")),
+          TextField(controller: stateController, decoration: InputDecoration(labelText: widget.appStrings.get("state"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: cityController, decoration: const InputDecoration(labelText: "City")),
+          TextField(controller: cityController, decoration: InputDecoration(labelText: widget.appStrings.get("city"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: pincodeController, decoration: const InputDecoration(labelText: "Pincode")),
+          TextField(controller: pincodeController, decoration: InputDecoration(labelText: widget.appStrings.get("pincode"))), // Localized
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _updateProfile,
-            child: const Text("Update Profile"),
+            child: Text(widget.appStrings.get("update_profile")), // Localized
           ),
         ],
       ),

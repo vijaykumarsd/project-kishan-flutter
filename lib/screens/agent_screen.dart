@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
+import 'app_localizations.dart'; // Import AppLocalizations
 
-// 🔹 ChatMessage model
+// 🔹 ChatMessage model (no change needed here for localization)
 class ChatMessage {
   final String sender;
   final String message;
@@ -12,8 +13,9 @@ class ChatMessage {
 
 class AgentScreen extends StatefulWidget {
   final String agentTitle;
+  final AppLocalizations appStrings; // Receive AppLocalizations
 
-  const AgentScreen({super.key, required this.agentTitle});
+  const AgentScreen({super.key, required this.agentTitle, required this.appStrings});
 
   @override
   State<AgentScreen> createState() => _AgentScreenState();
@@ -32,6 +34,37 @@ class _AgentScreenState extends State<AgentScreen> {
     super.initState();
     _speech = stt.SpeechToText();
     _flutterTts = FlutterTts();
+    _setTtsLanguage(); // Set TTS language based on selected app language
+  }
+
+  // Set the TTS language based on the current app language
+  Future<void> _setTtsLanguage() async {
+    String ttsLangCode = 'en-US'; // Default TTS language
+    switch (widget.appStrings.locale) {
+      case 'hi':
+        ttsLangCode = 'hi-IN';
+        break;
+      case 'mr':
+        ttsLangCode = 'mr-IN';
+        break;
+      case 'ta':
+        ttsLangCode = 'ta-IN';
+        break;
+      case 'kn':
+        ttsLangCode = 'kn-IN';
+        break;
+      case 'te':
+        ttsLangCode = 'te-IN';
+        break;
+      case 'ml':
+        ttsLangCode = 'ml-IN';
+        break;
+      case 'en':
+      default:
+        ttsLangCode = 'en-US'; // Fallback to en-US for English
+        break;
+    }
+    await _flutterTts.setLanguage(ttsLangCode);
   }
 
   // 🔸 Handle sending user message and agent response
@@ -56,26 +89,26 @@ class _AgentScreenState extends State<AgentScreen> {
     });
   }
 
-  // 🤖 Hardcoded simulated replies
+  // 🤖 Hardcoded simulated replies, now localized
   String _getAgentReply(String userInput) {
     final input = userInput.toLowerCase();
+    final appStrings = widget.appStrings; // Access localized strings
 
     if (input.contains('hi') || input.contains('hello')) {
-      return 'Hi, how can I help you?';
-    } else if (input.contains('weather')) {
-      return "Today's weather is sunny and clear.";
-    } else if (input.contains('your name')) {
-      return "I'm your assistant agent.";
-    } else if (input.contains('thanks')) {
-      return "You're welcome!";
+      return appStrings.get('hi_how_can_i_help');
+    } else if (input.contains(appStrings.get('weather').toLowerCase())) { // Localize keyword for weather
+      return appStrings.get('todays_weather');
+    } else if (input.contains(appStrings.get('your_name').toLowerCase())) { // Localize keyword for name
+      return appStrings.get('im_your_assistant_agent');
+    } else if (input.contains(appStrings.get('thanks').toLowerCase())) { // Localize keyword for thanks
+      return appStrings.get('youre_welcome');
     } else {
-      return "Sorry, I didn't understand that. Can you rephrase?";
+      return appStrings.get('sorry_didnt_understand');
     }
   }
 
   // 🔉 Text-to-speech
   void _speak(String text) async {
-    await _flutterTts.setLanguage("en-IN");
     await _flutterTts.setPitch(1.0);
     await _flutterTts.speak(text);
   }
@@ -94,7 +127,7 @@ class _AgentScreenState extends State<AgentScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Speech recognition not available')),
+        SnackBar(content: Text(widget.appStrings.get('speech_recognition_not_available'))), // Localized
       );
     }
   }
@@ -102,11 +135,11 @@ class _AgentScreenState extends State<AgentScreen> {
   // 📸 Placeholder for camera feature
   void _handleCameraInput() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('📷 Camera input clicked')),
+      SnackBar(content: Text(widget.appStrings.get('camera_input_clicked'))), // Localized
     );
   }
 
-  // 💬 Chat bubble widget
+  // 💬 Chat bubble widget (no change needed here for localization of message content)
   Widget _buildChatBubble(ChatMessage message) {
     final isUser = message.sender == 'user';
 
@@ -131,7 +164,7 @@ class _AgentScreenState extends State<AgentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.agentTitle),
+        title: Text(widget.agentTitle), // Title is passed from HomeScreen, already localized there
         backgroundColor: Colors.green[700],
       ),
       body: Column(
@@ -164,10 +197,10 @@ class _AgentScreenState extends State<AgentScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Type your question...',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: InputDecoration(
+                      hintText: widget.appStrings.get('type_your_question'), // Localized hint text
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
                   ),
                 ),
