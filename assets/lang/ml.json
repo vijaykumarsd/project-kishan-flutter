@@ -60,5 +60,13 @@
   "todays_weather": "ഇന്നത്തെ കാലാവസ്ഥ സണ്ണി, വ്യക്തമാണ്.",
   "im_your_assistant_agent": "ഞാൻ നിങ്ങളുടെ അസിസ്റ്റന്റ് ഏജന്റ്.",
   "youre_welcome": "സ്വാഗതം!",
-  "sorry_didnt_understand": "ക്ഷമിക്കണം, എനിക്ക് മനസ്സിലായില്ല. നിങ്ങൾക്ക് വീണ്ടും പറയാമോ?"
+  "sorry_didnt_understand": "ക്ഷമിക്കണം, എനിക്ക് മനസ്സിലായില്ല. നിങ്ങൾക്ക് വീണ്ടും പറയാമോ?",
+  "continue_button_text": "തുടരുക",
+  "en_short": "English",
+  "hi_short": "हिंदी",
+  "mr_short": "മराठी",
+  "ta_short": "தமிழ்",
+  "kn_short": "കನ್ನಡ",
+  "te_short": "తెలుగు",
+  "ml_short": "മലയാളം"
 }

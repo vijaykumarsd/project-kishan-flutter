@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart'; // Import for LocalizationsDelegate
 import 'package:flutter/services.dart' show rootBundle;
 
 // A class to manage application localizations (translations).
@@ -60,4 +61,28 @@ class AppLocalizations {
         return 'English'; // Default to English if locale code is unknown.
     }
   }
+
+  // 🔹 New: LocalizationsDelegate for AppLocalizations
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+}
+
+// 🔹 New: Private delegate class
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) {
+    // Return true if the language code is in the list of supported locales.
+    return AppLocalizations.supportedLocales.contains(locale.languageCode);
+  }
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    // Load your custom AppLocalizations for the given locale.
+    return AppLocalizations.load(locale.languageCode);
+  }
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
 }

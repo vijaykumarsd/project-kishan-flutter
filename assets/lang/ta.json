@@ -60,5 +60,13 @@
   "todays_weather": "இன்றைய வானிலை சன்னி மற்றும் தெளிவாக உள்ளது.",
   "im_your_assistant_agent": "நான் உங்கள் உதவி முகவர்.",
   "youre_welcome": "வரவேற்கிறோம்!",
-  "sorry_didnt_understand": "மன்னிக்கவும், எனக்கு அது புரியவில்லை. நீங்கள் மீண்டும் கூற முடியுமா?"
+  "sorry_didnt_understand": "மன்னிக்கவும், எனக்கு அது புரியவில்லை. நீங்கள் மீண்டும் கூற முடியுமா?",
+  "continue_button_text": "தொடரவும்",
+  "en_short": "English",
+  "hi_short": "हिंदी",
+  "mr_short": "മराठी",
+  "ta_short": "தமிழ்",
+  "kn_short": "കನ್ನಡ",
+  "te_short": "తెలుగు",
+  "ml_short": "മലയാളം"
 }

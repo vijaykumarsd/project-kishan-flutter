@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations: # Add this line
+    sdk: flutter         # Add this line
 
   # UI and Utility Packages
   font_awesome_flutter: ^10.8.0        # Latest as of Nov 2024 [1](https://github.com/fluttercommunity/font_awesome_flutter/releases)

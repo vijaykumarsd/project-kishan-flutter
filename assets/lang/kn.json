@@ -60,5 +60,14 @@
   "todays_weather": "ಇಂದಿನ ಹವಾಮಾನ ಬಿಸಿಲು ಮತ್ತು ಸ್ಪಷ್ಟವಾಗಿದೆ.",
   "im_your_assistant_agent": "ನಾನು ನಿಮ್ಮ ಸಹಾಯಕ ಏಜೆಂಟ್.",
   "youre_welcome": "ನಿಮಗೆ ಸ್ವಾಗತ!",
-  "sorry_didnt_understand": "ಕ್ಷಮಿಸಿ, ನನಗೆ ಅದು ಅರ್ಥವಾಗಲಿಲ್ಲ. ನೀವು ಮತ್ತೆ ಹೇಳಬಹುದೇ?"
+  "sorry_didnt_understand": "ಕ್ಷಮಿಸಿ, ನನಗೆ ಅದು ಅರ್ಥವಾಗಲಿಲ್ಲ. ನೀವು ಮತ್ತೆ ಹೇಳಬಹುದೇ?",
+  "continue_button_text": "ಮುಂದುವರಿಸಿ",
+  "en_short": "English",
+  "hi_short": "हिंदी",
+  "mr_short": "മराठी",
+  "ta_short": "தமிழ்",
+  "kn_short": "കನ್ನಡ",
+  "te_short": "తెలుగు",
+  "ml_short": "മലയാളം"
+  
 }

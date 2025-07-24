@@ -60,5 +60,13 @@
   "todays_weather": "Today's weather is sunny and clear.",
   "im_your_assistant_agent": "I'm your assistant agent.",
   "youre_welcome": "You're welcome!",
-  "sorry_didnt_understand": "Sorry, I didn't understand that. Can you rephrase?"
+  "sorry_didnt_understand": "Sorry, I didn't understand that. Can you rephrase?",
+  "continue_button_text": "Continue",
+  "en_short": "English",
+  "hi_short": "हिंदी",
+  "mr_short": "മराठी",
+  "ta_short": "தமிழ்",
+  "kn_short": "കನ್ನಡ",
+  "te_short": "తెలుగు",
+  "ml_short": "മലയാളം"
 }

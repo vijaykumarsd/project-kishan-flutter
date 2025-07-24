@@ -60,5 +60,13 @@
   "todays_weather": "నేటి వాతావరణం ఎండగా మరియు స్పష్టంగా ఉంది.",
   "im_your_assistant_agent": "నేను మీ సహాయక ఏజెంట్.",
   "youre_welcome": "మీకు స్వాగతం!",
-  "sorry_didnt_understand": "క్షమించండి, నాకు అర్థం కాలేదు. మీరు మళ్ళీ చెప్పగలరా?"
+  "sorry_didnt_understand": "క్షమించండి, నాకు అర్థం కాలేదు. మీరు మళ్ళీ చెప్పగలరా?",
+  "continue_button_text": "కొనసాగించు",
+  "en_short": "English",
+  "hi_short": "हिंदी",
+  "mr_short": "മराठी",
+  "ta_short": "தமிழ்",
+  "kn_short": "കನ್ನಡ",
+  "te_short": "తెలుగు",
+  "ml_short": "മലയാളം"
 }

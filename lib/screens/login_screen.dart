@@ -17,7 +17,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String _fullPhoneNumber = '';
-  String _selectedLanguage = 'en'; // Default language
+  String _selectedLanguage = 'en'; // Default language, will be loaded from prefs
   AppLocalizations? _appStrings; // Holds the loaded localized strings
 
   @override
@@ -44,9 +44,17 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  // Handles the login process, including phone number validation and OTP verification.
   void _login() async {
-    if (_appStrings == null) return; // Ensure strings are loaded
+    // Ensure appStrings are loaded before proceeding
+    if (_appStrings == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please wait, loading app data..."),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
 
     if (_fullPhoneNumber.isNotEmpty && _fullPhoneNumber.length > 8) {
       final snapshot = await FirebaseFirestore.instance
@@ -57,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!snapshot.exists) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_appStrings!.get("mobile_number_not_found")),
+            content: Text(_appStrings!.get("mobile_number_not_found")), // Localized message
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -71,105 +79,100 @@ class _LoginScreenState extends State<LoginScreen> {
           await FirebaseAuth.instance.signInWithCredential(credential);
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('logged_in_phone', _fullPhoneNumber);
-          _goToWelcomeScreen();
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+            );
+          }
         },
         verificationFailed: (FirebaseAuthException e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("${_appStrings!.get("verification_failed")} ${e.message}")),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("${_appStrings!.get("verification_failed")} ${e.message}"), // Localized message
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
         },
         codeSent: (String verificationId, int? resendToken) {
-          _showOTPDialog(verificationId);
+          // Navigate to OTP screen or show OTP input
+          _showOtpDialog(verificationId);
         },
-        codeAutoRetrievalTimeout: (String verificationId) {},
+        codeAutoRetrievalTimeout: (String verificationId) {
+          // Called when OTP auto-retrieval times out
+        },
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _appStrings!.get("invalid_mobile_number"),
-            style: const TextStyle(color: Colors.white),
-          ),
+          content: Text(_appStrings!.get("invalid_mobile_number")), // Localized message
           backgroundColor: Colors.redAccent,
         ),
       );
     }
   }
 
-  // Displays a dialog for OTP input and verification.
-  void _showOTPDialog(String verificationId) {
-    if (_appStrings == null) return; // Ensure strings are loaded
-
-    List<TextEditingController> controllers =
-        List.generate(6, (_) => TextEditingController());
-
+  void _showOtpDialog(String verificationId) {
+    String smsCode = '';
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(_appStrings!.get("enter_otp")),
+          title: Text(_appStrings!.get("enter_otp")), // Localized title
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(6, (index) {
-                  return SizedBox(
-                    width: 40,
-                    child: TextField(
-                      controller: controllers[index],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      decoration: const InputDecoration(
-                        counterText: "",
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        if (value.isNotEmpty && index < 5) {
-                          FocusScope.of(context).nextFocus();
-                        }
-                      },
-                    ),
-                  );
-                }),
+            children: <Widget>[
+              TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  smsCode = value;
+                },
+                decoration: InputDecoration(
+                  labelText: _appStrings!.get("enter_otp"), // Localized label
+                ),
               ),
               const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final smsCode = controllers.map((c) => c.text).join();
-                    if (smsCode.length == 6) {
-                      final credential = PhoneAuthProvider.credential(
-                        verificationId: verificationId,
-                        smsCode: smsCode,
-                      );
-
-                      try {
-                        await FirebaseAuth.instance.signInWithCredential(credential);
-                        Navigator.pop(context); // Close dialog
-                        _goToWelcomeScreen();   // Go to next screen
-                      } catch (e) {
-                        Navigator.pop(context);
+              ElevatedButton(
+                onPressed: () async {
+                  if (smsCode.length == 6) {
+                    PhoneAuthCredential credential = PhoneAuthProvider.credential(
+                      verificationId: verificationId,
+                      smsCode: smsCode,
+                    );
+                    try {
+                      await FirebaseAuth.instance.signInWithCredential(credential);
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('logged_in_phone', _fullPhoneNumber);
+                      if (mounted) {
+                        Navigator.of(context).pop(); // Close dialog
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                        );
+                      }
+                    } on FirebaseAuthException catch (e) {
+                      if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("${_appStrings!.get("otp_verification_failed")} ${e.toString()}"),
-                            backgroundColor: Colors.red,
+                            content: Text("${_appStrings!.get("otp_verification_failed")} ${e.message}"), // Localized message
+                            backgroundColor: Colors.redAccent,
                           ),
                         );
                       }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(_appStrings!.get("enter_all_otp_digits")),
-                          backgroundColor: Colors.orange,
-                        ),
-                      );
                     }
-                  },
-                  child: Text(_appStrings!.get("verify")),
-                ),
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(_appStrings!.get("enter_all_otp_digits")), // Localized message
+                        backgroundColor: Colors.orangeAccent,
+                      ),
+                    );
+                  }
+                },
+                child: Text(_appStrings!.get("verify")), // Localized button text
               ),
             ],
           ),
@@ -178,175 +181,106 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Navigates to the Welcome Screen after successful OTP login.
-  void _goToWelcomeScreen() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Show a loading indicator or empty container if strings are not yet loaded.
+    // Show a loading indicator if appStrings are not yet loaded
     if (_appStrings == null) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Full background image with a dark overlay.
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/farmer.jpg',
-              fit: BoxFit.cover,
-              color: Colors.black.withOpacity(0.4),
-              colorBlendMode: BlendMode.darken,
-            ),
-          ),
+      backgroundColor: Colors.white, // Changed to plain white background
+      body: Center( // Center the content
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App Logo/Icon (removed background image and gradient)
+              Image.asset(
+                'assets/images/kisan_image.png', // Assuming you have a default app logo here
+                height: 120,
+              ),
+              const SizedBox(height: 30),
 
-          // Responsive, scrollable foreground content.
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Language selection dropdown.
-                            Align(
-                              alignment: Alignment.topRight,
-                              child: DropdownButton<String>(
-                                value: _selectedLanguage,
-                                icon: const Icon(Icons.language, color: Colors.white),
-                                underline: Container(), // Remove underline
-                                onChanged: (String? newValue) async {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      _selectedLanguage = newValue;
-                                    });
-                                    final prefs = await SharedPreferences.getInstance();
-                                    await prefs.setString('app_language', newValue); // Save selected language
-                                    await _loadAppStrings(newValue); // Reload strings for new language
-                                  }
-                                },
-                                items: AppLocalizations.supportedLocales
-                                    .map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(
-                                      AppLocalizations.getLanguageName(value),
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                  );
-                                }).toList(),
-                                dropdownColor: Colors.black54, // Dark background for dropdown
-                              ),
-                            ),
-                            const SizedBox(height: 20),
+              // Welcome text
+              Text(
+                _appStrings!.get("welcome_to_app"), // Localized
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87, // Changed text color for white background
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
 
-                            // Circular App Logo.
-                            ClipOval(
-                              child: Image.asset(
-                                'assets/images/kisan_image.png',
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
+              // Phone Number Input
+              IntlPhoneField(
+                decoration: InputDecoration(
+                  labelText: _appStrings!.get("mobile_number"), // Localized
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide(),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade200, // Lighter fill color for white background
+                ),
+                initialCountryCode: 'IN', // Assuming India as default
+                onChanged: (phone) {
+                  _fullPhoneNumber = phone.completeNumber;
+                },
+                style: const TextStyle(color: Colors.black),
+                dropdownTextStyle: const TextStyle(color: Colors.black),
+              ),
+              const SizedBox(height: 20),
 
-                            // Welcome text, now localized.
-                            Text(
-                              _appStrings!.get("welcome_to_app"),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 40),
+              // Login Button
+              ElevatedButton(
+                onPressed: _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: Text(_appStrings!.get("send_otp_login")), // Localized
+              ),
+              const SizedBox(height: 10),
 
-                            // Constrained input & button section.
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 400),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  IntlPhoneField(
-                                    decoration: InputDecoration(
-                                      labelText: _appStrings!.get("mobile_number"), // Localized label
-                                      filled: true,
-                                      fillColor: Colors.white70,
-                                      border: const OutlineInputBorder(),
-                                    ),
-                                    initialCountryCode: 'IN',
-                                    keyboardType: TextInputType.phone,
-                                    onChanged: (phone) {
-                                      _fullPhoneNumber = phone.completeNumber;
-                                    },
-                                  ),
-                                  const SizedBox(height: 20),
-                                  ElevatedButton(
-                                    onPressed: _login,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green[800],
-                                      minimumSize: const Size.fromHeight(48),
-                                    ),
-                                    child: Text(
-                                      _appStrings!.get("send_otp_login"), // Localized button text
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-
-                            // Hyperlink-style Register Link, now localized.
-                            MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const RegistrationScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  _appStrings!.get("new_user_register_here"), // Localized link text
-                                  style: const TextStyle(
-                                    color: Colors.lightBlueAccent,
-                                    decoration: TextDecoration.underline,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+              // Hyperlink-style Register Link, now localized.
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegistrationScreen(),
                       ),
+                    );
+                  },
+                  child: Text(
+                    _appStrings!.get("new_user_register_here"), // Localized link text
+                    style: const TextStyle(
+                      color: Colors.lightBlueAccent,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

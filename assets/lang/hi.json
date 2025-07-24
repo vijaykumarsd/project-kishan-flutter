@@ -60,5 +60,13 @@
   "todays_weather": "आज का मौसम धूप और साफ है।",
   "im_your_assistant_agent": "मैं आपका सहायक एजेंट हूँ।",
   "youre_welcome": "आपका स्वागत है!",
-  "sorry_didnt_understand": "क्षमा करें, मुझे समझ नहीं आया। क्या आप इसे फिर से कह सकते हैं?"
+  "sorry_didnt_understand": "क्षमा करें, मुझे समझ नहीं आया। क्या आप इसे फिर से कह सकते हैं?",
+  "continue_button_text": "जारी रखें",
+  "en_short": "English",
+  "hi_short": "हिंदी",
+  "mr_short": "മराठी",
+  "ta_short": "தமிழ்",
+  "kn_short": "കನ್ನಡ",
+  "te_short": "తెలుగు",
+  "ml_short": "മലയാളം"
 }
