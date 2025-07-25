@@ -7,6 +7,7 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  http: ^0.13.6
   flutter:
     sdk: flutter
   flutter_localizations: # Add this line
@@ -29,7 +30,9 @@ dependencies:
   speech_to_text: ^6.4.0               # No newer version found
   image_picker: ^1.1.2                 # No newer version found
   permission_handler: ^11.3.1          # No newer version found
-  flutter_tts: ^4.0.2                  # No newer version found
+  flutter_tts: ^4.0.2 
+  path_provider: ^2.1.2 
+  flutter_sound: ^9.2.13                # No newer version found
 
 dev_dependencies:
   flutter_test:
