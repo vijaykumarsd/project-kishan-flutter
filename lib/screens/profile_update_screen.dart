@@ -9,8 +9,6 @@ import 'app_localizations.dart'; // Import AppLocalizations
 import 'package:shared_preferences/shared_preferences.dart'; // Import for SharedPreferences
 
 class ProfileUpdateScreen extends StatefulWidget {
-  // Hardcoded phone number for demonstration
-  final String phoneNumber = "+919566859696";
   const ProfileUpdateScreen({super.key});
 
   @override
@@ -33,6 +31,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _selectedLanguage = prefs.getString('app_language') ?? 'en';
+      print(_selectedLanguage);
     });
     await _loadAppStrings(_selectedLanguage); // Load strings for the selected language
   }
@@ -103,10 +102,9 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
 
 // The original content of the screen is now extracted into its own widget
 class ProfileUpdateForm extends StatefulWidget {
-  final String phoneNumber; // You may need to pass this in
   final AppLocalizations appStrings; // Receive AppLocalizations
 
-  const ProfileUpdateForm({super.key, this.phoneNumber = "+919566859696", required this.appStrings});
+  const ProfileUpdateForm({super.key, required this.appStrings});
 
   @override
   State<ProfileUpdateForm> createState() => _ProfileUpdateFormState();
@@ -125,6 +123,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
   DateTime? selectedDate;
   Uint8List? imageBytes;
   String? imageUrl;
+  String? _loggedInPhoneNumber; // Added to store the retrieved phone number
 
   // Define the consistent, language-agnostic keys for gender
   final List<String> _genderKeys = ['male', 'female', 'other'];
@@ -145,10 +144,26 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
   }
 
   Future<void> _loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+    _loggedInPhoneNumber = prefs.getString('logged_in_phone'); // Retrieve here
+
+    if (_loggedInPhoneNumber == null) {
+      print("Logged in phone number not found for profile update.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.appStrings.get("phone_number_not_found_for_profile")), // Localized
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final doc = await FirebaseFirestore.instance
           .collection('farmers')
-          .doc(widget.phoneNumber)
+          .doc(_loggedInPhoneNumber) // Use the retrieved phone number
           .get();
       if (doc.exists) {
         final data = doc.data()!;
@@ -207,17 +222,22 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
   }
 
   Future<void> _uploadImageToFirebase(XFile imageFile) async {
+    if (_loggedInPhoneNumber == null) {
+      print("Logged in phone number not available for image upload.");
+      return;
+    }
+
     try {
       final storageRef = FirebaseStorage.instance
           .ref()
-          .child('profile_images/${widget.phoneNumber}.jpg');
+          .child('profile_images/${_loggedInPhoneNumber}.jpg'); // Use the retrieved phone number
       
       await storageRef.putData(await imageFile.readAsBytes());
       final url = await storageRef.getDownloadURL();
       
       await FirebaseFirestore.instance
           .collection('farmers')
-          .doc(widget.phoneNumber)
+          .doc(_loggedInPhoneNumber) // Use the retrieved phone number
           .update({'profile_image_url': url});
 
       if (mounted) {
@@ -253,10 +273,23 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
   }
 
   Future<void> _updateProfile() async {
+    if (_loggedInPhoneNumber == null) {
+      print("Logged in phone number not available for profile update.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.appStrings.get("phone_number_not_available_for_update")), // Localized
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final docRef = FirebaseFirestore.instance
           .collection('farmers')
-          .doc(widget.phoneNumber);
+          .doc(_loggedInPhoneNumber); // Use the retrieved phone number
 
       // Find the English key for the selected localized gender
       String? genderKeyToSave;
@@ -365,7 +398,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
           const SizedBox(height: 16),
           TextField(controller: lastNameController, decoration: InputDecoration(labelText: widget.appStrings.get("last_name"))), // Localized
           const SizedBox(height: 16),
-          TextField(controller: mobileController, decoration: InputDecoration(labelText: widget.appStrings.get("mobile_number"))), // Localized
+          TextField(controller: mobileController, decoration: InputDecoration(labelText: widget.appStrings.get("mobile_number"), enabled: false)), // Localized and disabled for editing
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: selectedGender,

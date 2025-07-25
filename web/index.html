@@ -31,6 +31,10 @@
 
   <title>demo</title>
   <link rel="manifest" href="manifest.json">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+
   <script type="module">
     // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -49,6 +53,27 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+messaging.requestPermission().then(() => {
+    console.log('Notification permission granted.');
+    return messaging.getToken(); // Get the FCM token
+}).then((token) => {
+    console.log('FCM Token:', token);
+    // Send this token to your server to store it
+}).catch((error) => {
+    console.error('Unable to get permission to notify.', error);
+});
+
+messaging.onMessage((payload) => {
+    console.log('Message received. ', payload);
+    // You can display a custom notification or update UI here
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+        body: payload.notification.body,
+        icon: '/firebase-logo.png' // Optional: path to an icon
+    };
+    new Notification(notificationTitle, notificationOptions);
+});
   </script>
 </head>
 <body>
