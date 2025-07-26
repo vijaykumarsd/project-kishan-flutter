@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'shared_scaffold.dart';
 import 'app_localizations.dart'; // Import AppLocalizations
 import 'package:shared_preferences/shared_preferences.dart'; // Import for SharedPreferences
+import 'package:intl/intl.dart'; // For date formatting
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -99,137 +100,247 @@ class WelcomeContent extends StatelessWidget {
   final AppLocalizations appStrings; // Receive AppLocalizations
   const WelcomeContent({super.key, required this.appStrings});
 
-  // Helper method to build a weather information card
-  Widget _buildWeatherCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green[50], // Very light green background for weather card
-        borderRadius: BorderRadius.circular(16), // Rounded corners
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 4), // Subtle shadow
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
-        children: [
-          Icon(
-            Icons.cloud, // Placeholder weather icon
-            size: 50, // Adjusted size for grid
-            color: Colors.green[700], // Darker green for icon
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '28°C', // Placeholder temperature
-            style: TextStyle(
-              fontSize: 36, // Adjusted size for grid
-              fontWeight: FontWeight.bold, // Bold sans-serif
-              color: Colors.green[800], // Dark green for temperature
+  // Sample weather data based on the provided JSON
+  final Map<String, dynamic> weatherData = const {
+    "current": {
+      "temperature": 21.3,
+      "condition": "Partly cloudy",
+      "wind_kph": 29.5,
+      "precip_mm": 0,
+      "pressure_mb": 1013
+    },
+    "forecast": [
+      {
+        "date": "2025-07-26",
+        "avg_temp": 21.1,
+        "condition": "Patchy rain nearby",
+        "icon_code": "176.png"
+      },
+      {
+        "date": "2025-07-27",
+        "avg_temp": 21.6,
+        "condition": "Patchy rain nearby",
+        "icon_code": "176.png"
+      },
+      {
+        "date": "2025-07-28",
+        "avg_temp": 22,
+        "condition": "Patchy rain nearby",
+        "icon_code": "176.png"
+      },
+      {
+        "date": "2025-07-29",
+        "avg_temp": 22.6,
+        "condition": "Patchy rain nearby",
+        "icon_code": "176.png"
+      },
+      {
+        "date": "2025-07-30",
+        "avg_temp": 22.7,
+        "condition": "Partly Cloudy ",
+        "icon_code": "116.png"
+      }
+    ],
+    "location": {
+      "country": "India",
+      "region": "Karnataka",
+      "lat": 12.9833,
+      "lon": 77.5833,
+      "localtime": "2025-07-26 20:21",
+      "timezone": "Asia/Kolkata"
+    },
+    "astro": {
+      "sunrise": "06:04 AM",
+      "sunset": "06:48 PM"
+    }
+  };
+
+  // Helper to get icon based on condition (simplified for demonstration)
+  IconData _getWeatherIcon(String condition) {
+    if (condition.toLowerCase().contains('cloudy')) {
+      return Icons.cloud;
+    } else if (condition.toLowerCase().contains('rain')) {
+      return Icons.cloudy_snowing; // Using this as a generic rain/snow icon
+    } else if (condition.toLowerCase().contains('sun') || condition.toLowerCase().contains('clear')) {
+      return Icons.wb_sunny;
+    }
+    return Icons.cloud; // Default
+  }
+
+  // Helper method to build the Weather Outlook card
+  Widget _buildWeatherOutlookCard(BuildContext context) {
+    final current = weatherData['current'];
+    final forecast = weatherData['forecast'] as List<dynamic>;
+
+    return Card(
+      elevation: 8, // Subtle shadow
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Rounded corners
+      margin: EdgeInsets.zero, // No external margin, controlled by padding in parent
+      color: const Color(0xFF1A237E), // Dark blue background for weather card
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              appStrings.get('weather_outlook'), // Localized "Weather Outlook"
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold, // Bold sans-serif
+                color: Colors.white,
+              ),
             ),
-          ),
-          Text(
-            appStrings.get('weather_condition_cloudy'), // Placeholder localized condition
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16, // Adjusted size for grid
-              fontWeight: FontWeight.normal, // Regular sans-serif
-              color: Colors.grey[700],
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Icon(
+                  _getWeatherIcon(current['condition']),
+                  size: 60,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        current['condition'],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.normal, // Regular sans-serif
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        '${current['temperature']}°C',
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold, // Bold sans-serif
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Wind: ${current['wind_kph']} kph',
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                    Text(
+                      'Precip: ${current['precip_mm']} mm',
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                    Text(
+                      'Pressure: ${current['pressure_mb']} mb',
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            // Forecast section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: forecast.take(5).map((day) {
+                final date = DateTime.parse(day['date']);
+                final dayOfWeek = DateFormat('EEE').format(date); // e.g., 'Mon'
+                return Column(
+                  children: [
+                    Text(
+                      dayOfWeek,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    const SizedBox(height: 5),
+                    Icon(
+                      _getWeatherIcon(day['condition']),
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${day['avg_temp']}°C',
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // Helper method to build a map information card
-  Widget _buildMapCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(appStrings.get('map_implementation_note')), // Localized message
-            backgroundColor: Colors.blueGrey,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.blueGrey[50], // Light blue-grey background for map card
-          borderRadius: BorderRadius.circular(16), // Rounded corners
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4), // Subtle shadow
-            ),
-          ],
-        ),
+  // Helper method to build the Information card
+  Widget _buildInformationCard(BuildContext context) {
+    final locationData = weatherData['location'];
+    final astroData = weatherData['astro'];
+
+    return Card(
+      elevation: 8, // Subtle shadow
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Rounded corners
+      margin: EdgeInsets.zero, // No external margin, controlled by padding in parent
+      color: Colors.white, // White background for information card
+      child: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.map, // Map icon
-              size: 50, // Adjusted size for grid
-              color: Colors.blue[700], // Blue for map icon
-            ),
-            const SizedBox(height: 8),
             Text(
-              appStrings.get('current_location'), // Localized "Current Location"
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
+              appStrings.get('information'), // Localized "Information"
+              style: const TextStyle(
+                fontSize: 20,
                 fontWeight: FontWeight.bold, // Bold sans-serif
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 5),
-            Expanded(
-              child: Container(
-                // Visually suggestive map background
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey[100], // Slightly darker grey for map area
-                  borderRadius: BorderRadius.circular(8),
-                  image: const DecorationImage(
-                    // Changed URL to explicitly request a PNG image from placehold.co
-                    image: NetworkImage(
-                      'https://placehold.co/150x150/E0E0E0/616161.png?text=Map+Placeholder', // Placeholder image
-                    ),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    appStrings.get('tap_to_view_map'), // Localized "Tap to view map"
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueGrey[800],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              appStrings.get('weather_location_placeholder'), // Re-use location text
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal, // Regular sans-serif
-                color: Colors.grey[600],
-              ),
-            ),
+            const SizedBox(height: 20),
+            _buildInfoRow(appStrings.get('country'), locationData['country']),
+            _buildInfoRow(appStrings.get('region'), locationData['region']),
+            _buildInfoRow(appStrings.get('lat_lon'), '${locationData['lat']}, ${locationData['lon']}'),
+            _buildInfoRow(appStrings.get('current_time'), locationData['localtime'].split(' ')[1]), // Extract time
+            _buildInfoRow(appStrings.get('timezone_id'), locationData['timezone']),
+            _buildInfoRow(appStrings.get('sunrise'), astroData['sunrise']),
+            _buildInfoRow(appStrings.get('sunset'), astroData['sunset']),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.normal, // Regular sans-serif
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold, // Bold sans-serif for value
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -252,23 +363,19 @@ class WelcomeContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            Expanded( // Allows the GridView to take available space
+            Expanded( // Allows the Row to take available space
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: GridView.count(
-                  crossAxisCount: 2, // 2 columns
-                  crossAxisSpacing: 16, // Spacing between columns
-                  mainAxisSpacing: 16, // Spacing between rows
-                  childAspectRatio: 1.0, // Make cells roughly square
-                  shrinkWrap: true, // Allows GridView to be inside a Column
-                  physics: const NeverScrollableScrollPhysics(), // Prevents independent scrolling
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch, // Make cards stretch to same height
                   children: [
-                    _buildWeatherCard(context),
-                    _buildMapCard(context),
-                    // You can add two more cards here to complete a 2x2 grid
-                    // For example:
-                    // _buildEmptyCard(context, 'Quick Links', Icons.link),
-                    // _buildEmptyCard(context, 'Notifications', Icons.notifications),
+                    Expanded(
+                      child: _buildWeatherOutlookCard(context),
+                    ),
+                    const SizedBox(width: 16), // Spacing between cards
+                    Expanded(
+                      child: _buildInformationCard(context),
+                    ),
                   ],
                 ),
               ),
@@ -298,6 +405,7 @@ class WelcomeContent extends StatelessWidget {
                 appStrings.get('go_to_dashboard'), // Localized
               ),
             ),
+            const SizedBox(height: 20), // Add some space at the bottom
           ],
         ),
       ),
