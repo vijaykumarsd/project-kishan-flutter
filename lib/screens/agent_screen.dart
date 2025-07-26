@@ -26,6 +26,16 @@ class AgentScreen extends StatefulWidget {
   State<AgentScreen> createState() => _AgentScreenState();
 }
 
+const Map<String, String> supportedSpeechLocales = {
+  'hi': 'hi_IN',
+  'ta': 'ta_IN',
+  'te': 'te_IN',
+  'ml': 'ml_IN',
+  'kn': 'kn_IN',
+  'mr': 'mr_IN',
+  'en': 'en_US',
+};
+
 class ChatMessage {
   final String sender;
   final String message;
@@ -56,19 +66,12 @@ class _AgentScreenState extends State<AgentScreen> {
   }
 
   Future<void> _setTtsLanguage() async {
-    String ttsLangCode = switch (widget.appStrings.locale) {
-      'hi' => 'hi-IN',
-      'mr' => 'mr-IN',
-      'ta' => 'ta-IN',
-      'kn' => 'kn-IN',
-      'te' => 'te-IN',
-      'ml' => 'ml-IN',
-      _ => 'en-US',
-    };
+    String ttsLangCode = supportedSpeechLocales[widget.appStrings.locale] ?? 'en_US';
     await _flutterTts.setLanguage(ttsLangCode);
   }
 
   void _listen() async {
+    String micLocale = supportedSpeechLocales[widget.appStrings.locale] ?? 'en_US';
     if (!_isListening) {
       bool available = await _speech.initialize(
         onStatus: (val) => print('Speech status: $val'),
@@ -76,11 +79,13 @@ class _AgentScreenState extends State<AgentScreen> {
       );
       if (available) {
         setState(() => _isListening = true);
-        _speech.listen(onResult: (val) {
-          setState(() {
-            _controller.text = val.recognizedWords;
-          });
-        });
+        _speech.listen( localeId: micLocale,
+          onResult: (val) {
+            setState(() {
+              _controller.text = val.recognizedWords;
+            });
+          }, 
+        );
       }
     } else {
       setState(() => _isListening = false);
@@ -94,11 +99,26 @@ class _AgentScreenState extends State<AgentScreen> {
     Uint8List? imageBytes,
     String? imageName,
   }) async {
+    final token = await getBearerToken();
+     
+    if (!mounted) return;
+ 
+    if (token == null) {
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+        const SnackBar(content: Text('Error: You must be signed in.')),
+      );
+      return;
+    }
+ 
     final url = Uri.parse('http://127.0.0.1:8009/api/simple');
     var request = http.MultipartRequest('POST', url);
 
+    // 🔐 Set the Authorization Bearer token
+    request.headers['Authorization'] = 'Bearer $token';
+
     if (queryText != null && queryText.trim().isNotEmpty) {
       request.fields['query'] = queryText.trim();
+      request.fields['lang'] = widget.appStrings.locale;
     }
 
     if (imageFile != null) {
@@ -120,16 +140,15 @@ class _AgentScreenState extends State<AgentScreen> {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        final agentReply = jsonResponse['response'];
+       // Proper UTF decoding
+      final decoded = utf8.decode(response.bodyBytes);
+      final jsonResponse = jsonDecode(decoded);
+      final agentReply = jsonResponse['response'];
 
         setState(() {
           _messages.add(ChatMessage(sender: 'agent', message: agentReply));
         });
-      } else {
-        throw Exception('Failed: ${response.statusCode}');
-      }
+      await _flutterTts.speak(agentReply);
     } catch (e) {
       ScaffoldMessenger.of(context as BuildContext).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -138,22 +157,22 @@ class _AgentScreenState extends State<AgentScreen> {
   }
 
   Future<String?> getBearerToken() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user != null) {
-    return await user.getIdToken();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return await user.getIdToken();
+    }
+    return null;
   }
-  return null;
-}
 
   Future<void> _sendTextToBackend() async {
     final queryText = _controller.text.trim();
-      final token = await getBearerToken();
-      if (token == null) {
-    ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-      const SnackBar(content: Text('Error: You must be signed in.')),
-    );
-    return;
-  }
+    final token = await getBearerToken();
+    if (token == null) {
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+        const SnackBar(content: Text('Error: You must be signed in.')),
+      );
+      return;
+    }
     if (queryText.isEmpty) {
       ScaffoldMessenger.of(context as BuildContext).showSnackBar(
         const SnackBar(content: Text("Please speak or type your query")),
@@ -220,8 +239,8 @@ class _AgentScreenState extends State<AgentScreen> {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          // Use light green for user messages, white for agent messages
-          color: isUser ? Colors.green[100] : Colors.white,
+          // Use light green for user messages, light blue for agent messages
+          color: isUser ? Colors.green[100] : Colors.blue[100],
           borderRadius: BorderRadius.circular(16), // Rounded corners
           boxShadow: [ // Subtle shadow
             BoxShadow(
@@ -263,7 +282,7 @@ class _AgentScreenState extends State<AgentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // White background
+      backgroundColor: const Color(0xFFD8F3DC), // Light green background from (1)
       appBar: AppBar(
         title: Text(
           widget.agentTitle, // Use agentTitle instead of hardcoded 'Agent'
@@ -272,7 +291,7 @@ class _AgentScreenState extends State<AgentScreen> {
             fontWeight: FontWeight.bold, // Bold sans-serif for heading
           ),
         ),
-        backgroundColor: Colors.green[800], // Dark green app bar
+        backgroundColor: const Color(0xFF40916C), // Dark green app bar from (1)
         foregroundColor: Colors.white,
         elevation: 4, // Add subtle shadow
       ),
@@ -285,9 +304,9 @@ class _AgentScreenState extends State<AgentScreen> {
               child: Text(
                 widget.appStrings.get("ask_your_farm_guide"), // Localized
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 24, // Keep original font size
                   fontWeight: FontWeight.bold, // Bold sans-serif for heading
-                  color: Colors.black87,
+                  color: Colors.black87, // Keep original text color
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -332,7 +351,7 @@ class _AgentScreenState extends State<AgentScreen> {
                     child: ElevatedButton(
                       onPressed: _listen,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[800], // Dark green button
+                        backgroundColor: const Color(0xFF40916C), // Dark green button from (1)
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12), // Rounded corners
@@ -352,7 +371,7 @@ class _AgentScreenState extends State<AgentScreen> {
                     child: ElevatedButton(
                       onPressed: _pickImageAndSend,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[800], // Dark green button
+                        backgroundColor: const Color(0xFF40916C), // Dark green button from (1)
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12), // Rounded corners
@@ -372,7 +391,7 @@ class _AgentScreenState extends State<AgentScreen> {
                     child: ElevatedButton(
                       onPressed: _sendTextToBackend,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[800], // Dark green button
+                        backgroundColor: const Color(0xFF40916C), // Dark green button from (1)
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12), // Rounded corners
