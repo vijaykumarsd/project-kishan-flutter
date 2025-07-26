@@ -71,14 +71,17 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // White background
       appBar: AppBar(
         title: Text(
           _appStrings!.get('select_language'),
-          style: const TextStyle(color: Colors.black),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold, // Bold sans-serif for heading
+          ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: Colors.green[800], // Dark green app bar
+        elevation: 4, // Add subtle shadow
         centerTitle: true,
       ),
       body: Column(
@@ -88,10 +91,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               padding: const EdgeInsets.all(12.0),
               child: GridView.builder(
                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 160, // max width of each card (in pixels)
+                maxCrossAxisExtent: 160,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
-                childAspectRatio: 0.8,   // height will adjust automatically
+                childAspectRatio: 0.8,
               ),
                 itemCount: AppLocalizations.supportedLocales.length,
                 itemBuilder: (context, index) {
@@ -101,12 +104,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   return GestureDetector(
                     onTap: () => _onLanguageSelected(localeCode),
                     child: Card(
-                      color: isSelected ? Colors.green.shade100 : Colors.white,
-                      elevation: isSelected ? 4 : 2,
+                      color: isSelected ? Colors.green[100] : Colors.white, // Light green for selected card, white for unselected
+                      elevation: isSelected ? 6 : 2, // Add subtle shadow
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12), // Rounded corners
                         side: BorderSide(
-                          color: isSelected ? Colors.green.shade700 : Colors.grey.shade300,
+                          color: isSelected ? Colors.green[700]! : Colors.grey[300]!,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -123,8 +126,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                     _appStrings!.get('${localeCode}_short'),
                                     style: TextStyle(
                                       fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected ? Colors.green.shade800 : Colors.black87,
+                                      fontWeight: FontWeight.bold, // Bold sans-serif for language code
+                                      color: isSelected ? Colors.green[800] : Colors.black87,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -132,8 +135,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                     AppLocalizations.getLanguageName(localeCode),
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: isSelected ? Colors.green.shade700 : Colors.black54,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected ? Colors.green[700] : Colors.black54,
+                                      fontWeight: FontWeight.normal, // Regular sans-serif for language name
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -147,7 +150,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                               right: 6,
                               child: Icon(
                                 Icons.check_circle,
-                                color: Colors.green.shade700,
+                                color: Colors.green[700],
                                 size: 20,
                               ),
                             ),
@@ -164,13 +167,17 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
             child: ElevatedButton(
               onPressed: _navigateToLoginScreen,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
+                backgroundColor: Colors.green[800], // Dark green button
                 foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(45),
+                minimumSize: const Size.fromHeight(50), // Slightly taller button
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12), // Rounded corners
                 ),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                 elevation: 4, // Add subtle shadow
+                textStyle: const TextStyle(
+                  fontSize: 18, // Larger font size
+                  fontWeight: FontWeight.bold, // Bold sans-serif for button text
+                ),
               ),
               child: Text(_appStrings!.get('continue_button_text')),
             ),

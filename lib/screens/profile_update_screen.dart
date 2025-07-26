@@ -138,6 +138,20 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
     _loadProfileData();
   }
 
+  @override
+  void dispose() {
+    // Dispose of all TextEditingControllers to prevent memory leaks
+    firstNameController.dispose();
+    lastNameController.dispose();
+    mobileController.dispose();
+    emailController.dispose();
+    addressController.dispose();
+    stateController.dispose();
+    cityController.dispose();
+    pincodeController.dispose();
+    super.dispose();
+  }
+
   // Load localized gender options based on current appStrings
   void _loadLocalizedGenderOptions() {
     _localizedGenderOptions = _genderKeys.map((key) => widget.appStrings.get(key)).toList();
@@ -146,9 +160,11 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     _loggedInPhoneNumber = prefs.getString('logged_in_phone'); // Retrieve here
+    print('DEBUG: _loggedInPhoneNumber from SharedPreferences: $_loggedInPhoneNumber');
 
-    if (_loggedInPhoneNumber == null) {
-      print("Logged in phone number not found for profile update.");
+
+    if (_loggedInPhoneNumber == null || _loggedInPhoneNumber!.isEmpty) {
+      print("DEBUG: Logged in phone number is null or empty. Cannot fetch profile data.");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -165,8 +181,13 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
           .collection('farmers')
           .doc(_loggedInPhoneNumber) // Use the retrieved phone number
           .get();
+
+      print('DEBUG: Firestore query for document ID: $_loggedInPhoneNumber');
+      print('DEBUG: Document exists: ${doc.exists}');
+
       if (doc.exists) {
         final data = doc.data()!;
+        print('DEBUG: Document data: $data');
         if (mounted) {
           setState(() {
             firstNameController.text = data['first_name'] ?? '';
@@ -192,10 +213,21 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
               selectedDate = (data['date_of_birth'] as Timestamp).toDate();
             }
           });
+          print('DEBUG: Profile data successfully loaded and set to controllers.');
+        }
+      } else {
+        print('DEBUG: Document does not exist for phone number: $_loggedInPhoneNumber');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(widget.appStrings.get("profile_not_found")), // Localized
+              backgroundColor: Colors.orange,
+            ),
+          );
         }
       }
     } catch (e) {
-      print("Error loading profile data: $e");
+      print("ERROR: Error loading profile data: $e");
       if(mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -264,6 +296,25 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
       initialDate: selectedDate ?? DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.green[800]!, // Dark green for header background
+              onPrimary: Colors.white, // White text on header
+              onSurface: Colors.black87, // Black text for dates
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green[800], // Dark green for buttons
+                textStyle: const TextStyle(fontWeight: FontWeight.bold), // Bold sans-serif for button text
+              ),
+            ),
+            // Removed the dialogTheme property as it was causing the type error
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -344,6 +395,20 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
     }
   }
 
+  InputDecoration _inputDecoration(String labelText) {
+    return InputDecoration(
+      labelText: labelText,
+      labelStyle: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.normal), // Regular sans-serif
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+        borderSide: BorderSide.none, // No border line
+      ),
+      filled: true,
+      fillColor: Colors.grey[100], // Light grey background
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -352,7 +417,7 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: Colors.grey[200],
+            backgroundColor: Colors.green[100], // Light green background
             child: ClipOval(
               child: imageBytes != null
                   ? Image.memory(
@@ -369,36 +434,50 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
                           fit: BoxFit.cover,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return const Center(child: CircularProgressIndicator());
+                            return Center(child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.green[800]!),
+                            ));
                           },
                           errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.person, size: 40);
+                            return Icon(Icons.person, size: 40, color: Colors.green[700]);
                           },
                         )
-                      : const Icon(Icons.person, size: 40),
+                      : Icon(Icons.person, size: 40, color: Colors.green[700]),
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.camera_alt),
+                icon: Icon(Icons.camera_alt, color: Colors.green[700]),
                 onPressed: () => _pickImage(ImageSource.camera),
                 tooltip: widget.appStrings.get("take_a_picture"), // Localized
               ),
               IconButton(
-                icon: const Icon(Icons.photo_library),
+                icon: Icon(Icons.photo_library, color: Colors.green[700]),
                 onPressed: () => _pickImage(ImageSource.gallery),
                 tooltip: widget.appStrings.get("choose_from_gallery"), // Localized
               ),
             ],
           ),
           const SizedBox(height: 16),
-          TextField(controller: firstNameController, decoration: InputDecoration(labelText: widget.appStrings.get("first_name"))), // Localized
+          TextField(
+            controller: firstNameController,
+            decoration: _inputDecoration(widget.appStrings.get("first_name")),
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: lastNameController, decoration: InputDecoration(labelText: widget.appStrings.get("last_name"))), // Localized
+          TextField(
+            controller: lastNameController,
+            decoration: _inputDecoration(widget.appStrings.get("last_name")),
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: mobileController, decoration: InputDecoration(labelText: widget.appStrings.get("mobile_number"), enabled: false)), // Localized and disabled for editing
+          TextField(
+            controller: mobileController,
+            decoration: _inputDecoration(widget.appStrings.get("mobile_number")).copyWith(enabled: false), // Localized and disabled for editing
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black54), // Dimmed text for disabled field
+          ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: selectedGender,
@@ -407,7 +486,9 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
               child: Text(gender),
             )).toList(),
             onChanged: (value) => setState(() => selectedGender = value),
-            decoration: InputDecoration(labelText: widget.appStrings.get("gender")), // Localized
+            decoration: _inputDecoration(widget.appStrings.get("gender")), // Localized
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+            iconEnabledColor: Colors.green[700],
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -416,24 +497,58 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
             controller: TextEditingController(
               text: selectedDate != null ? "${selectedDate!.toLocal()}".split(' ')[0] : ""
             ),
-            decoration: InputDecoration(
-              labelText: widget.appStrings.get("date_of_birth"), // Localized
+            decoration: _inputDecoration(widget.appStrings.get("date_of_birth")).copyWith(
               hintText: widget.appStrings.get("select_date"), // Localized
             ),
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
           ),
           const SizedBox(height: 16),
-          TextField(controller: emailController, decoration: InputDecoration(labelText: widget.appStrings.get("email"))), // Localized
+          TextField(
+            controller: emailController,
+            decoration: _inputDecoration(widget.appStrings.get("email")), // Localized
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: addressController, decoration: InputDecoration(labelText: widget.appStrings.get("address"))), // Localized
+          TextField(
+            controller: addressController,
+            decoration: _inputDecoration(widget.appStrings.get("address")), // Localized
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: stateController, decoration: InputDecoration(labelText: widget.appStrings.get("state"))), // Localized
+          TextField(
+            controller: stateController,
+            decoration: _inputDecoration(widget.appStrings.get("state")), // Localized
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: cityController, decoration: InputDecoration(labelText: widget.appStrings.get("city"))), // Localized
+          TextField(
+            controller: cityController,
+            decoration: _inputDecoration(widget.appStrings.get("city")), // Localized
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: pincodeController, decoration: InputDecoration(labelText: widget.appStrings.get("pincode"))), // Localized
+          TextField(
+            controller: pincodeController,
+            decoration: _inputDecoration(widget.appStrings.get("pincode")), // Localized
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _updateProfile,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[800], // Dark green button
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(50), // Consistent button height
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12), // Rounded corners
+              ),
+              elevation: 4, // Subtle shadow
+              textStyle: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold, // Bold sans-serif for button text
+              ),
+            ),
             child: Text(widget.appStrings.get("update_profile")), // Localized
           ),
         ],

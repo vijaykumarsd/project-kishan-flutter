@@ -109,24 +109,28 @@ class DashboardContent extends StatelessWidget {
     return GestureDetector(
       onTap: () => _navigateTo(context, appStrings.get(titleKey)), // Use localized title
       child: Card(
-        color: Colors.white.withOpacity(0.9),
-        elevation: 6,
+        color: Colors.white.withOpacity(0.95), // White background for cards
+        elevation: 8, // Increased subtle shadow
         margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Rounded corners
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: color.withOpacity(0.1),
+                backgroundColor: color.withOpacity(0.15), // Slightly more vibrant background for icon
                 child: Icon(icon, size: 30, color: color),
               ),
               const SizedBox(width: 20),
               Expanded(
                 child: Text(
                   appStrings.get(titleKey), // Localized card title
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold, // Bold sans-serif for heading
+                    color: Colors.black87,
+                  ),
                 ),
               ),
               const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
@@ -158,7 +162,7 @@ class DashboardContent extends StatelessWidget {
                 appStrings.get("choose_your_assistant"), // Localized
                 style: const TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold, // Bold sans-serif for heading
                   color: Colors.white,
                 ),
               ),

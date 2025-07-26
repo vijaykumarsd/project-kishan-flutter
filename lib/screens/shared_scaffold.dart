@@ -149,8 +149,17 @@ class _SharedScaffoldState extends State<SharedScaffold> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Colors.green[700],
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold, // Bold sans-serif for heading
+          ),
+        ),
+        backgroundColor: Colors.green[800], // Dark green app bar
+        foregroundColor: Colors.white,
+        elevation: 4, // Subtle shadow
+        iconTheme: const IconThemeData(color: Colors.white), // Ensure drawer icon is white
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -158,17 +167,21 @@ class _SharedScaffoldState extends State<SharedScaffold> {
               children: [
                 Text(
                   firstName,
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.normal, // Regular sans-serif
+                  ),
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: Colors.grey.shade300,
+                  backgroundColor: Colors.green[100], // Light green for avatar background
                   backgroundImage: profileImageUrl != null
                       ? NetworkImage(profileImageUrl)
                       : null,
                   child: profileImageUrl == null
-                      ? const Icon(Icons.person, size: 20)
+                      ? Icon(Icons.person, size: 20, color: Colors.green[700]) // Darker green for icon
                       : null,
                 ),
               ],
@@ -181,11 +194,24 @@ class _SharedScaffoldState extends State<SharedScaffold> {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(fullName),
-              accountEmail: Text(email),
+              accountName: Text(
+                fullName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold, // Bold sans-serif
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+              accountEmail: Text(
+                email,
+                style: const TextStyle(
+                  fontWeight: FontWeight.normal, // Regular sans-serif
+                  color: Colors.white70,
+                ),
+              ),
               currentAccountPicture: CircleAvatar(
                 radius: 30,
-                backgroundColor: Colors.white,
+                backgroundColor: Colors.green[100], // Light green for avatar background
                 child: ClipOval(
                   child: profileImageUrl != null
                       ? Image.network(
@@ -194,32 +220,41 @@ class _SharedScaffoldState extends State<SharedScaffold> {
                           width: 90,
                           height: 90,
                           errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.person, size: 40);
+                            return Icon(Icons.person, size: 40, color: Colors.green[700]);
                           },
                         )
-                      : const Icon(Icons.person, size: 40),
+                      : Icon(Icons.person, size: 40, color: Colors.green[700]),
                 ),
               ),
-              decoration: const BoxDecoration(color: Colors.green),
+              decoration: BoxDecoration(color: Colors.green[800]), // Dark green for drawer header
             ),
             ListTile(
-              leading: const Icon(Icons.home),
-              title: Text(_appStrings!.get("home")),
+              leading: Icon(Icons.home, color: Colors.green[700]),
+              title: Text(
+                _appStrings!.get("home"),
+                style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87), // Regular sans-serif
+              ),
               onTap: () {
                 Navigator.pop(context);
                 widget.onTabTapped(0);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text(_appStrings!.get("settings")),
+              leading: Icon(Icons.settings, color: Colors.green[700]),
+              title: Text(
+                _appStrings!.get("settings"),
+                style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87), // Regular sans-serif
+              ),
               onTap: () {
                 // Handle settings tap
               },
             ),
             ListTile(
-              leading: const Icon(Icons.logout),
-              title: Text(_appStrings!.get("logout")), // Localized logout text
+              leading: Icon(Icons.logout, color: Colors.red[700]), // Red icon for logout
+              title: Text(
+                _appStrings!.get("logout"), // Localized logout text
+                style: TextStyle(fontWeight: FontWeight.normal, color: Colors.red[700]), // Regular sans-serif
+              ),
               onTap: _logout, // Call the new logout method
             ),
             Padding(
@@ -228,10 +263,17 @@ class _SharedScaffoldState extends State<SharedScaffold> {
                 value: _selectedLanguage,
                 decoration: InputDecoration(
                   labelText: _appStrings!.get("select_language"),
-                  border: const OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.normal),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12), // Rounded corners
+                    borderSide: BorderSide.none,
+                  ),
                   filled: true,
-                  fillColor: Colors.grey[200],
+                  fillColor: Colors.grey[100], // Light grey fill
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 ),
+                style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
+                iconEnabledColor: Colors.green[700],
                 onChanged: (String? newValue) async {
                   if (newValue != null) {
                     final prefs = await SharedPreferences.getInstance();
@@ -257,8 +299,11 @@ class _SharedScaffoldState extends State<SharedScaffold> {
       body: widget.body,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: widget.currentIndex,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.green[800], // Dark green for selected item
         unselectedItemColor: Colors.grey,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold), // Bold for selected label
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal), // Regular for unselected label
+        type: BottomNavigationBarType.fixed, // Ensure all labels are visible
         onTap: (index) {
           if (widget.currentIndex == index) {
             Navigator.popUntil(context, (route) => route.isFirst);
@@ -291,3 +336,4 @@ class _SharedScaffoldState extends State<SharedScaffold> {
     );
   }
 }
+

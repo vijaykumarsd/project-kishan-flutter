@@ -56,7 +56,7 @@ class AppLocalizations {
       case 'te':
         return 'తెలుగు'; // Telugu
       case 'ml':
-        return 'മലയാളം'; // Malayalam
+        return 'മലയാളಂ'; // Malayalam
       default:
         return 'English'; // Default to English if locale code is unknown.
     }

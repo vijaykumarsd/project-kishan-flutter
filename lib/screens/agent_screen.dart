@@ -220,8 +220,17 @@ class _AgentScreenState extends State<AgentScreen> {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isUser ? Colors.green[100] : Colors.blue[100],
-          borderRadius: BorderRadius.circular(16),
+          // Use light green for user messages, white for agent messages
+          color: isUser ? Colors.green[100] : Colors.white,
+          borderRadius: BorderRadius.circular(16), // Rounded corners
+          boxShadow: [ // Subtle shadow
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,10 +244,14 @@ class _AgentScreenState extends State<AgentScreen> {
               ),
             if (message.message.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: EdgeInsets.only(top: hasImage ? 8 : 0),
                 child: Text(
                   message.message,
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal, // Regular sans-serif for body text
+                    color: Colors.black87,
+                  ),
                 ),
               ),
           ],
@@ -250,20 +263,36 @@ class _AgentScreenState extends State<AgentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFD8F3DC),
+      backgroundColor: Colors.white, // White background
       appBar: AppBar(
-        title: const Text('Agent'),
-        backgroundColor: const Color(0xFF40916C),
+        title: Text(
+          widget.agentTitle, // Use agentTitle instead of hardcoded 'Agent'
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold, // Bold sans-serif for heading
+          ),
+        ),
+        backgroundColor: Colors.green[800], // Dark green app bar
         foregroundColor: Colors.white,
+        elevation: 4, // Add subtle shadow
       ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 10),
-            const Text(
-              "Ask your Farm guide",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Text(
+                widget.appStrings.get("ask_your_farm_guide"), // Localized
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold, // Bold sans-serif for heading
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
+            const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(10),
@@ -274,37 +303,94 @@ class _AgentScreenState extends State<AgentScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: TextField(
                 controller: _controller,
-                decoration: const InputDecoration(
-                  hintText: 'Type your question...',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: widget.appStrings.get('type_your_question'), // Localized
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12), // Rounded corners
+                    borderSide: BorderSide.none, // Remove default border
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[100], // Light grey fill
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: const TextStyle(
+                  fontWeight: FontWeight.normal, // Regular sans-serif
+                  color: Colors.black87,
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                FloatingActionButton(
-                  onPressed: _listen,
-                  backgroundColor: const Color(0xFF40916C),
-                  child: Icon(_isListening ? Icons.mic_off : Icons.mic),
-                ),
-                FloatingActionButton(
-                  onPressed: _pickImageAndSend,
-                  backgroundColor: const Color(0xFF40916C),
-                  child: const Icon(Icons.camera_alt),
-                ),
-                FloatingActionButton(
-                  onPressed: _sendTextToBackend,
-                  backgroundColor: const Color(0xFF40916C),
-                  child: const Icon(Icons.send),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _listen,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[800], // Dark green button
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12), // Rounded corners
+                        ),
+                        elevation: 4, // Subtle shadow
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold, // Bold sans-serif
+                        ),
+                      ),
+                      child: Icon(_isListening ? Icons.mic_off : Icons.mic),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _pickImageAndSend,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[800], // Dark green button
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12), // Rounded corners
+                        ),
+                        elevation: 4, // Subtle shadow
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold, // Bold sans-serif
+                        ),
+                      ),
+                      child: const Icon(Icons.camera_alt),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _sendTextToBackend,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[800], // Dark green button
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12), // Rounded corners
+                        ),
+                        elevation: 4, // Subtle shadow
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold, // Bold sans-serif
+                        ),
+                      ),
+                      child: const Icon(Icons.send),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
           ],
         ),
       ),

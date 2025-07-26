@@ -195,7 +195,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     value: value,
                                     child: Text(
                                       AppLocalizations.getLanguageName(value),
-                                      style: const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.normal, // Regular sans-serif
+                                      ),
                                     ),
                                   );
                                 }).toList(),
@@ -217,8 +220,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             Text(
                               _appStrings!.get("farmer_registration"),
                               style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 26, // Slightly larger font size
+                                fontWeight: FontWeight.bold, // Bold sans-serif
                                 color: Colors.white,
                               ),
                               textAlign: TextAlign.center,
@@ -233,58 +236,92 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   TextField(
                                     controller: firstNameController,
                                     onChanged: _validateFirstName,
-                                    style: const TextStyle(color: Colors.white),
+                                    style: const TextStyle(
+                                      color: Colors.black87, // Input text color
+                                      fontWeight: FontWeight.normal, // Regular sans-serif
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: _appStrings!.get("first_name"), // Localized label
                                       errorText: _firstNameError,
-                                      labelStyle: const TextStyle(color: Colors.white),
+                                      labelStyle: TextStyle(color: Colors.grey[700]),
+                                      hintStyle: TextStyle(color: Colors.grey[500]),
                                       filled: true,
-                                      fillColor: Colors.white.withOpacity(0.2),
+                                      fillColor: Colors.white.withOpacity(0.9), // White with slight opacity
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12), // Rounded corners
+                                        borderSide: BorderSide.none, // No border line
                                       ),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                                     ),
                                   ),
                                   const SizedBox(height: 16),
                                   TextField(
                                     controller: lastNameController,
                                     onChanged: _validateLastName,
-                                    style: const TextStyle(color: Colors.white),
+                                    style: const TextStyle(
+                                      color: Colors.black87, // Input text color
+                                      fontWeight: FontWeight.normal, // Regular sans-serif
+                                    ),
                                     decoration: InputDecoration(
                                       labelText: _appStrings!.get("last_name"), // Localized label
                                       errorText: _lastNameError,
-                                      labelStyle: const TextStyle(color: Colors.white),
+                                      labelStyle: TextStyle(color: Colors.grey[700]),
+                                      hintStyle: TextStyle(color: Colors.grey[500]),
                                       filled: true,
-                                      fillColor: Colors.white.withOpacity(0.2),
+                                      fillColor: Colors.white.withOpacity(0.9), // White with slight opacity
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12), // Rounded corners
+                                        borderSide: BorderSide.none, // No border line
                                       ),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                                     ),
                                   ),
                                   const SizedBox(height: 16),
                                   IntlPhoneField(
                                     decoration: InputDecoration(
                                       labelText: _appStrings!.get("mobile_number"), // Localized label
+                                      labelStyle: TextStyle(color: Colors.grey[700]),
+                                      hintStyle: TextStyle(color: Colors.grey[500]),
                                       filled: true,
-                                      fillColor: Colors.white70,
-                                      border: const OutlineInputBorder(),
+                                      fillColor: Colors.white.withOpacity(0.9), // White with slight opacity
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12), // Rounded corners
+                                        borderSide: BorderSide.none, // No border line
+                                      ),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                                     ),
                                     initialCountryCode: 'IN',
                                     keyboardType: TextInputType.phone,
                                     onChanged: (phone) {
                                       _fullPhoneNumber = phone.completeNumber;
                                     },
+                                    style: const TextStyle(
+                                      color: Colors.black87, // Input text color
+                                      fontWeight: FontWeight.normal, // Regular sans-serif
+                                    ),
+                                    dropdownTextStyle: const TextStyle(
+                                      color: Colors.black87, // Dropdown text color
+                                      fontWeight: FontWeight.normal, // Regular sans-serif
+                                    ),
                                   ),
                                   const SizedBox(height: 24),
                                   ElevatedButton(
                                     onPressed: _register,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green[800],
-                                      minimumSize: const Size.fromHeight(48),
+                                      backgroundColor: Colors.green[800], // Dark green button
+                                      foregroundColor: Colors.white,
+                                      minimumSize: const Size.fromHeight(50), // Consistent button height
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12), // Rounded corners
+                                      ),
+                                      elevation: 4, // Subtle shadow
+                                      textStyle: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold, // Bold sans-serif
+                                      ),
                                     ),
                                     child: Text(
                                       _appStrings!.get("register"), // Localized button text
-                                      style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -293,9 +330,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     child: Text(
                                       _appStrings!.get("back_to_login"), // Localized link text
                                       style: const TextStyle(
-                                        color: Colors.lightBlueAccent,
+                                        color: Colors.white70, // Consistent with login screen
                                         decoration: TextDecoration.underline,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.normal, // Regular sans-serif
                                         fontSize: 16,
                                       ),
                                     ),
@@ -317,3 +354,4 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 }
+

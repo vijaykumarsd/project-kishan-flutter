@@ -113,7 +113,13 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(_appStrings!.get("enter_otp")),
+          title: Text(
+            _appStrings!.get("enter_otp"),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold, // Bold for heading
+              color: Colors.black87, // Dark color for heading
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -124,6 +130,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 decoration: InputDecoration(
                   labelText: _appStrings!.get("enter_otp"),
+                  border: OutlineInputBorder(
+                     borderRadius: BorderRadius.circular(10), // Rounded corners
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[100], // Light grey fill
+                ),
+                style: const TextStyle(
+                  fontWeight: FontWeight.normal, // Regular sans-serif
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 20),
@@ -164,6 +179,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[800], // Dark green button
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), // Rounded corners
+                  ),
+                  elevation: 4, // Subtle shadow
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold, // Bold sans-serif
+                  ),
+                ),
                 child: Text(_appStrings!.get("verify")),
               ),
             ],
@@ -185,12 +212,13 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // Background Image (assuming farmer.jpg exists in assets/images)
           Image.asset(
             'assets/images/farmer.jpg',
             fit: BoxFit.cover,
           ),
           Container(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withOpacity(0.4), // Dark overlay
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
@@ -199,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Circular Logo
+                      // Circular Logo (assuming kisan_image.png exists in assets/images)
                       ClipOval(
                         child: Image.asset(
                           'assets/images/kisan_image.png',
@@ -210,12 +238,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Welcome text in white
+                      // Welcome text
                       Text(
                         _appStrings!.get("welcome_to_app"),
                         style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 28, // Larger font size
+                          fontWeight: FontWeight.bold, // Bold sans-serif for heading
                           color: Colors.white,
                         ),
                         textAlign: TextAlign.center,
@@ -226,16 +254,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       IntlPhoneField(
                         decoration: InputDecoration(
                           labelText: _appStrings!.get("mobile_number"),
-                          border: const OutlineInputBorder(),
+                          border: OutlineInputBorder( // Apply rounded corners to input field
+                            borderRadius: BorderRadius.circular(12), // More rounded corners
+                          ),
                           filled: true,
-                          fillColor: Colors.grey.shade200,
+                          fillColor: Colors.white.withOpacity(0.9), // White background for input with slight opacity
+                          labelStyle: TextStyle(color: Colors.grey[700]),
+                          hintStyle: TextStyle(color: Colors.grey[500]),
                         ),
                         initialCountryCode: 'IN',
                         onChanged: (phone) {
                           _fullPhoneNumber = phone.completeNumber;
                         },
-                        style: const TextStyle(color: Colors.black),
-                        dropdownTextStyle: const TextStyle(color: Colors.black),
+                        style: const TextStyle(
+                          color: Colors.black87, // Regular sans-serif for input text
+                          fontWeight: FontWeight.normal,
+                        ),
+                        dropdownTextStyle: const TextStyle(
+                          color: Colors.black87, // Regular sans-serif for dropdown
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -243,15 +281,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ElevatedButton(
                         onPressed: _login,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
+                          backgroundColor: Colors.green[800], // Dark green button
                           foregroundColor: Colors.white,
                           minimumSize: const Size.fromHeight(50),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12), // Rounded corners
                           ),
+                          elevation: 4, // Subtle shadow
                           textStyle: const TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.bold, // Bold sans-serif for button text
                           ),
                         ),
                         child: Text(_appStrings!.get("send_otp_login")),
@@ -273,9 +312,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             _appStrings!.get("new_user_register_here"),
                             style: const TextStyle(
-                              color: Colors.lightBlueAccent,
+                              color: Colors.white70, // Slightly desaturated for better contrast on dark overlay
                               decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.normal, // Regular sans-serif for body text
                               fontSize: 16,
                             ),
                           ),
