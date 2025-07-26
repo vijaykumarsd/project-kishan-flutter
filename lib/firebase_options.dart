@@ -41,20 +41,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBqvaarXGhE0eRhlzLrgQQmXNeAUkDf9oA',
-    appId: '1:247743444691:web:d7cd9200b16b5c0fcd0626',
-    messagingSenderId: '247743444691',
-    projectId: 'project-kisan-app',
-    authDomain: 'project-kisan-app.firebaseapp.com',
-    storageBucket: 'project-kisan-app.firebasestorage.app',
+    apiKey: 'AIzaSyD74SYxy8dG8dqR0KuRAC_CNl3v10W_7_0',
+    appId: '1:261844974018:web:11a73ee6aafe0bc1cdfe5b',
+    messagingSenderId: '261844974018',
+    projectId: 'project-kisan-app-467108',
+    authDomain: 'project-kisan-app-467108.firebaseapp.com',
+    storageBucket: 'project-kisan-app-467108.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDX19Lf5liSOAl8cWBSmzfJ_h-B_sNpNnQ',
-    appId: '1:247743444691:android:fb06f86876315d12cd0626',
-    messagingSenderId: '247743444691',
-    projectId: 'project-kisan-app',
-    storageBucket: 'project-kisan-app.firebasestorage.app',
+    apiKey: 'AIzaSyBMUsDfIsFhoBzRi72gK013raUo47wc4HI',
+    appId: '1:261844974018:android:847f5c280c35a37ccdfe5b',
+    messagingSenderId: '261844974018',
+    projectId: 'project-kisan-app-467108',
+    storageBucket: 'project-kisan-app-467108.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
