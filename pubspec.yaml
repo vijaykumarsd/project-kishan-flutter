@@ -52,3 +52,4 @@ flutter:
     - assets/images/farmer_icon.png
     - assets/images/user.png
     - assets/lang/
+    # - assets/config/backend_config.json

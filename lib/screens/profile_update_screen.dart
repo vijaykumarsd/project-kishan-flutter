@@ -201,9 +201,9 @@ class _ProfileUpdateFormState extends State<ProfileUpdateForm> {
 
             // Retrieve the stored gender key (e.g., 'male', 'female')
             String? storedGenderKey = data['gender']?.toLowerCase();
-            if (storedGenderKey != null && _genderKeys.contains(storedGenderKey)) {
+            if (_genderKeys.contains(storedGenderKey)) {
               // If the stored key is valid, get its localized version for display
-              selectedGender = widget.appStrings.get(storedGenderKey);
+              selectedGender = widget.appStrings.get(storedGenderKey!);
             } else {
               selectedGender = null; // No valid gender stored or found
             }

@@ -12,7 +12,7 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _WelcomeScreenState extends State<WelcomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   AppLocalizations? _appStrings; // Added AppLocalizations instance
   String _selectedLanguage = 'en'; // Track selected language
@@ -21,6 +21,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() {
     super.initState();
     _loadSelectedLanguage(); // Load language when the screen initializes
+    WidgetsBinding.instance.addObserver(this); // Add observer to listen for lifecycle changes
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // Remove observer when the widget is disposed
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // This method is called when the app's lifecycle state changes.
+    // We are interested when the app comes back to the foreground ('resumed').
+    if (state == AppLifecycleState.resumed) {
+      _loadSelectedLanguage(); // Re-load language to pick up any changes
+    }
   }
 
   // Asynchronously loads the selected language from SharedPreferences.
@@ -29,7 +45,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     setState(() {
       _selectedLanguage = prefs.getString('app_language') ?? 'en';
     });
-    await _loadAppStrings(_selectedLanguage); // Load strings for the selected language
+    // Ensure that _appStrings is updated after loading the new language
+    await _loadAppStrings(_selectedLanguage);
   }
 
   // Asynchronously loads the AppLocalizations for a given locale.
@@ -53,9 +70,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
     return [
       WelcomeContent(appStrings: _appStrings!), // Pass appStrings to WelcomeContent
-      Center(child: Text(_appStrings!.get('messages') + ' ' + _appStrings!.get('profile'))), // Placeholder localized
-      Center(child: Text(_appStrings!.get('alerts') + ' ' + _appStrings!.get('profile'))),    // Placeholder localized
-      Center(child: Text(_appStrings!.get('profile') + ' ' + _appStrings!.get('profile'))),   // Placeholder localized
+      Center(child: Text(_appStrings!.get('messages'))), // Placeholder localized
+      Center(child: Text(_appStrings!.get('alerts'))), // Placeholder localized
+      Center(child: Text(_appStrings!.get('profile'))),  // Placeholder localized
     ];
   }
 
@@ -183,7 +200,7 @@ class WelcomeContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              appStrings.get('weather_outlook'), // Localized "Weather Outlook"
+              appStrings.get('Weather Outlook'), // Localized "Weather Outlook"
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold, // Bold sans-serif
@@ -226,15 +243,15 @@ class WelcomeContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Wind: ${current['wind_kph']} kph',
+                      '${appStrings.get('Wind')}: ${current['wind_kph']} kph', // Localized 'Wind'
                       style: const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     Text(
-                      'Precip: ${current['precip_mm']} mm',
+                      '${appStrings.get('Precip')}: ${current['precip_mm']} mm', // Localized 'Precip'
                       style: const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     Text(
-                      'Pressure: ${current['pressure_mb']} mb',
+                      '${appStrings.get('Pressure')}: ${current['pressure_mb']} mb', // Localized 'Pressure'
                       style: const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                   ],
@@ -247,7 +264,7 @@ class WelcomeContent extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: forecast.take(5).map((day) {
                 final date = DateTime.parse(day['date']);
-                final dayOfWeek = DateFormat('EEE').format(date); // e.g., 'Mon'
+                final dayOfWeek = DateFormat('EEE', appStrings.locale).format(date); // Localize day of week
                 return Column(
                   children: [
                     Text(
@@ -286,26 +303,26 @@ class WelcomeContent extends StatelessWidget {
       margin: EdgeInsets.zero, // No external margin, controlled by padding in parent
       color: Colors.white, // White background for information card
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              appStrings.get('information'), // Localized "Information"
+              appStrings.get('Information'), // Localized "Information"
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold, // Bold sans-serif
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 20),
-            _buildInfoRow(appStrings.get('country'), locationData['country']),
-            _buildInfoRow(appStrings.get('region'), locationData['region']),
-            _buildInfoRow(appStrings.get('lat_lon'), '${locationData['lat']}, ${locationData['lon']}'),
-            _buildInfoRow(appStrings.get('current_time'), locationData['localtime'].split(' ')[1]), // Extract time
-            _buildInfoRow(appStrings.get('timezone_id'), locationData['timezone']),
-            _buildInfoRow(appStrings.get('sunrise'), astroData['sunrise']),
-            _buildInfoRow(appStrings.get('sunset'), astroData['sunset']),
+            const SizedBox(height: 12),
+            _buildInfoRow(appStrings.get('Country'), locationData['country']),
+            _buildInfoRow(appStrings.get('Region'), locationData['region']),
+            // _buildInfoRow(appStrings.get('lat_lon'), '${locationData['lat']}, ${locationData['lon']}'),
+            // _buildInfoRow(appStrings.get('current_time'), locationData['localtime'].split(' ')[1]), // Extract time
+            _buildInfoRow(appStrings.get('Timezone_id'), locationData['timezone']),
+            _buildInfoRow(appStrings.get('Sunrise'), astroData['sunrise']),
+            _buildInfoRow(appStrings.get('Sunset'), astroData['sunset']),
           ],
         ),
       ),
@@ -383,9 +400,9 @@ class WelcomeContent extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(

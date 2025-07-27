@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'; // Import for localization delegates
-
 import 'firebase_options.dart'; // Generated automatically
 import 'screens/language_selection_screen.dart'; // Import the new LanguageSelectionScreen
 import 'screens/app_localizations.dart'; // Import AppLocalizations

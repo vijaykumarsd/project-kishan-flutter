@@ -41,6 +41,19 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  // Method to save the bearer token
+  Future<void> _saveBearerToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bearer_token', token);
+    print('Bearer Token saved: $token'); // For debugging
+  }
+
+  // Method to retrieve the bearer token
+  static Future<String?> getBearerToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('bearer_token');
+  }
+
   void _login() async {
     if (_appStrings == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,6 +87,16 @@ class _LoginScreenState extends State<LoginScreen> {
           await FirebaseAuth.instance.signInWithCredential(credential);
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('logged_in_phone', _fullPhoneNumber);
+
+          // Get and save the bearer token here
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            final token = await user.getIdToken();
+            if (token != null) {
+              await _saveBearerToken(token); // Save the token
+            }
+          }
+
           if (mounted) {
             Navigator.pushReplacement(
               context,
@@ -153,6 +176,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       await FirebaseAuth.instance.signInWithCredential(credential);
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setString('logged_in_phone', _fullPhoneNumber);
+
+                      // Get and save the bearer token here after successful OTP verification
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        final token = await user.getIdToken();
+                        if (token != null) {
+                          await _saveBearerToken(token); // Save the token
+                        }
+                      }
+
                       if (mounted) {
                         Navigator.of(context).pop();
                         Navigator.pushReplacement(

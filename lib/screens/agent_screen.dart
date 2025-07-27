@@ -7,15 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:kisan_app/screens/app_localizations.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
- 
+
+// import 'package:path/path.dart' as path; // This import is duplicated, can be removed
+
 class AgentScreen extends StatefulWidget {
   final String agentTitle;
   final AppLocalizations appStrings;
@@ -41,12 +42,14 @@ class ChatMessage {
   final String message;
   final File? image;
   final Uint8List? webImage;
+  final String? imageUrl; // Added for images from chat history
 
   ChatMessage({
     required this.sender,
     required this.message,
     this.image,
     this.webImage,
+    this.imageUrl, // Added
   });
 }
 
@@ -63,6 +66,7 @@ class _AgentScreenState extends State<AgentScreen> {
     _speech = stt.SpeechToText();
     _flutterTts = FlutterTts();
     _setTtsLanguage();
+    _fetchChatHistory(); // Call this to fetch chat history on screen load
   }
 
   Future<void> _setTtsLanguage() async {
@@ -84,7 +88,7 @@ class _AgentScreenState extends State<AgentScreen> {
             setState(() {
               _controller.text = val.recognizedWords;
             });
-          }, 
+          },
         );
       }
     } else {
@@ -100,16 +104,16 @@ class _AgentScreenState extends State<AgentScreen> {
     String? imageName,
   }) async {
     final token = await getBearerToken();
-     
+
     if (!mounted) return;
- 
+
     if (token == null) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
         const SnackBar(content: Text('Error: You must be signed in.')),
       );
       return;
     }
- 
+
     final url = Uri.parse('http://127.0.0.1:8009/api/simple');
     var request = http.MultipartRequest('POST', url);
 
@@ -150,31 +154,106 @@ class _AgentScreenState extends State<AgentScreen> {
         });
       await _flutterTts.speak(agentReply);
     } catch (e) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
         SnackBar(content: Text('Error: $e')),
       );
     }
   }
 
-  Future<String?> getBearerToken() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return await user.getIdToken();
+  Future<void> _fetchChatHistory() async {
+    final token = await getBearerToken(); // Get the bearer token
+    if (!mounted) return;
+
+    if (token == null) {
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
+        const SnackBar(content: Text('Error: You must be signed in to view chat history.')),
+      );
+      return;
     }
-    return null;
+
+    // Ensure this URL is correct. Based on your JSON, it might be 'chat_history' with underscore.
+    final url = Uri.parse('http://127.0.0.1:8009/api/chat-history'); // Your chat history endpoint
+    // final url = Uri.parse(AppConfig.apiBaseUrl);
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token', // Pass the bearer token as a request header
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = utf8.decode(response.bodyBytes);
+        // Access the 'history' key from the JSON response
+        final Map<String, dynamic> jsonMap = jsonDecode(decoded);
+        final List<dynamic> rawHistory = jsonMap['history'] ?? [];
+        // Reverse to show oldest messages first
+        final List<dynamic> reversedHistory = rawHistory.reversed.toList();
+
+        setState(() {
+          _messages.clear(); // Clear existing messages before adding history
+          for (var chatEntry in reversedHistory) {
+            final String? query = chatEntry['query'];
+            final String? agentResponse = chatEntry['response'];
+            final String? imageUrl = chatEntry['image_url'];
+
+            // Add user message if query exists or if it's an image-only query
+            if (query != null && query.isNotEmpty) {
+              _messages.add(ChatMessage(
+                sender: 'user',
+                message: query,
+                imageUrl: imageUrl, // Associate image with user's query if present
+              ));
+            } else if (imageUrl != null) { // Case: User sent an image only (query is null)
+              _messages.add(ChatMessage(
+                sender: 'user',
+                message: '', // Message is empty as it's an image-only query
+                imageUrl: imageUrl,
+              ));
+            }
+
+            // Add agent message if response exists
+            if (agentResponse != null && agentResponse.isNotEmpty) {
+              _messages.add(ChatMessage(
+                sender: 'agent',
+                message: agentResponse,
+                // If the agent sends an image, you'd add imageUrl here.
+                // Based on your provided history, image_url is for user input.
+              ));
+            }
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
+          SnackBar(content: Text('Failed to load chat history: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
+        SnackBar(content: Text('Error fetching chat history: $e')),
+      );
+    }
+  }
+
+  Future<String?> getBearerToken() async {
+     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('bearer_token');
+    print('Retrieved Bearer Token from SharedPreferences in AgentScreen: $token'); // For debugging
+    return token;
   }
 
   Future<void> _sendTextToBackend() async {
     final queryText = _controller.text.trim();
     final token = await getBearerToken();
     if (token == null) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
         const SnackBar(content: Text('Error: You must be signed in.')),
       );
       return;
     }
     if (queryText.isEmpty) {
-      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
         const SnackBar(content: Text("Please speak or type your query")),
       );
       return;
@@ -223,14 +302,15 @@ class _AgentScreenState extends State<AgentScreen> {
       }
     }
 
-    ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+    ScaffoldMessenger.of(context as BuildContext).showSnackBar( // Removed as BuildContext
       const SnackBar(content: Text("No image was selected.")),
     );
   }
 
   Widget _buildChatBubble(ChatMessage message) {
     final isUser = message.sender == 'user';
-    final hasImage = message.image != null || message.webImage != null;
+    // Check for local image, web image bytes, OR network image URL
+    final bool hasImage = message.image != null || message.webImage != null || message.imageUrl != null;
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -259,12 +339,28 @@ class _AgentScreenState extends State<AgentScreen> {
                 borderRadius: BorderRadius.circular(10),
                 child: message.image != null
                     ? Image.file(message.image!, height: 150)
-                    : Image.memory(message.webImage!, height: 150),
+                    : message.webImage != null
+                        ? Image.memory(message.webImage!, height: 150)
+                        : message.imageUrl != null // This is the new part to display network image
+                            ? Image.network(message.imageUrl!, height: 150,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+                            )
+                            : const SizedBox.shrink(), // Should not happen if hasImage is true
               ),
             if (message.message.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(top: hasImage ? 8 : 0),
-                child: Text(
+                child: SelectableText(
                   message.message,
                   style: const TextStyle(
                     fontSize: 16,
@@ -302,7 +398,7 @@ class _AgentScreenState extends State<AgentScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Text(
-                widget.appStrings.get("ask_your_farm_guide"), // Localized
+                widget.appStrings.get("ask your farm guide"), // Localized
                 style: const TextStyle(
                   fontSize: 24, // Keep original font size
                   fontWeight: FontWeight.bold, // Bold sans-serif for heading

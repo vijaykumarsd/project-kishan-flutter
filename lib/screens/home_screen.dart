@@ -170,7 +170,7 @@ class DashboardContent extends StatelessWidget {
             const SizedBox(height: 20),
             _buildCard(context, 'agronomist', Icons.agriculture, Colors.green), // Use key
             _buildCard(context, 'market_analyst', Icons.bar_chart, Colors.orange), // Use key
-            _buildCard(context, 'scheme_navigator', Icons.map, Colors.blue), // Use key
+            _buildCard(context, 'Government Scheme Navigator', Icons.map, Colors.blue), // Use key
           ],
         ),
       ],
